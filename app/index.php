@@ -65,6 +65,27 @@
         }
         function highlightField(){ document.getElementById("uploadWrapper").style.borderColor = "#22c55e"; }
         function normalizeField(){ document.getElementById("uploadWrapper").style.borderColor = "#334155"; }
+        function preventBrowserDropNavigation(){
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                window.addEventListener(eventName, function(event){
+                    event.preventDefault();
+                    event.stopPropagation();
+                }, false);
+            });
+        }
+        function setupDropUpload(){
+            const uploadWrapper = document.getElementById('uploadWrapper');
+            const fileInput = document.getElementById('uploadFile');
+            uploadWrapper.addEventListener('drop', function(event){
+                event.preventDefault();
+                event.stopPropagation();
+                if (event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+                    fileInput.files = event.dataTransfer.files;
+                    changeText(fileInput);
+                }
+                normalizeField();
+            });
+        }
         function filterEntries() {
             const q = document.getElementById('searchInput').value.toLowerCase().trim();
             document.querySelectorAll('.card').forEach(card => {
@@ -243,6 +264,8 @@ if(isset($_GET["Pfad0"])){
         if(event.target === this){ this.style.display = "none"; }
     });
     document.addEventListener("DOMContentLoaded", function(){
+        preventBrowserDropNavigation();
+        setupDropUpload();
         if(localStorage.getItem("lancloud_view_list") === "1"){
             document.querySelectorAll(".grid").forEach(g => g.classList.add("list"));
             const btn=document.getElementById("viewToggle");
