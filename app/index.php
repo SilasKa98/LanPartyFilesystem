@@ -174,7 +174,7 @@ if(isset($_GET["Pfad0"])){
             elseif(stripos($entry, ".zip") !== false){ $media = "../media/folder.svg"; }
             else{ $media = "../media/file.svg"; }
 
-            echo "<div class='card' tabindex='0' role='button' aria-label='Datei ".$entry."' data-name='".$entry."' oncontextmenu='openDropdown(this)' onclick='previewFile(\"".$entry."\", \"".$media."\")'><img loading='lazy' src='".$media."' alt='File icon'>";
+            echo "<div class='card' tabindex='0' role='button' aria-label='Datei ".$entry."' data-name='".$entry."' oncontextmenu='openDropdown(this)' onclick='previewFile(\"".$entry."\", \"".$media."\", \"".$path."/".$entry."\")'><img loading='lazy' src='".$media."' alt='File icon'>";
             echo '<div class="dropdown-content">';
             echo '<a href="'.$path.'/'.$entry.'" download>Download</a>';
             echo '<form action="deleteFile.php" method="post" style="margin:0;">';
@@ -210,7 +210,7 @@ if(isset($_GET["Pfad0"])){
             window.location.href = el.dataset.href;
         }
     }
-    function previewFile(fileName, filePath){
+    function previewFile(fileName, filePath, downloadPath){
         const modal = document.getElementById("previewModal");
         const body = document.getElementById("previewBody");
         const actions = document.getElementById("previewActions");
@@ -220,7 +220,7 @@ if(isset($_GET["Pfad0"])){
             body.innerHTML = `<p><strong>${fileName}</strong></p><p>Keine Vorschau für diesen Dateityp.</p>`;
         }
         actions.innerHTML = `
-            <a class="btn" href="${filePath}" download>Download</a>
+            <a class="btn" href="${downloadPath}" download>Download</a>
             <button class="btn" type="button" onclick="deleteFromPreview('${fileName.replace(/'/g, "\\'")}')">Delete</button>
         `;
         modal.style.display = "block";
