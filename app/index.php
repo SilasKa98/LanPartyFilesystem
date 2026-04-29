@@ -48,6 +48,7 @@
         .modal-content { width:min(420px,90%); margin: 15vh auto; background: #f8fafc; color:#0f172a; border-radius: 14px; padding: 16px; }
         .modal-content input { width:100%; padding:10px; margin-bottom: 10px; }
         #noContent { text-align:center; color:var(--muted); margin-top: 24px; }
+        #myModal {z-index: 99;}
     </style>
     <script>
         document.addEventListener('contextmenu', event => event.preventDefault());
