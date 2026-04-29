@@ -151,9 +151,10 @@ if(isset($_GET["Pfad0"])){
     print "<p class='section-title'>Folders</p><div class='grid'>";
     foreach($scanned_directory as $entry){
         if(strpos($entry, ".") === false){
-            echo "<div class='card folder-card' data-name='".$entry."' oncontextmenu='openDropdownFolder(this)'>";
-            echo "<a href='".$_SERVER['REQUEST_URI'].($cntPath == 0 ? "?" : "&")."Pfad".$cntPath."=".$entry."'><img loading='lazy' src='../media/folder-open.svg' alt='Folder'></a>";
+            echo "<div class='card folder-card' tabindex='0' role='link' aria-label='Ordner ".$entry."' data-href='".$_SERVER['REQUEST_URI'].($cntPath == 0 ? "?" : "&")."Pfad".$cntPath."=".$entry."' data-name='".$entry."' oncontextmenu='openDropdownFolder(this)' onclick='openFolderCard(event, this)' onkeydown='openFolderCardByKey(event, this)'>";
+            echo "<img loading='lazy' src='../media/folder-open.svg' alt='Folder'>";
             echo '<div class="dropdown-content">';
+            echo '<a href="downloadFolder.php?path='.urlencode($path).'&folder='.urlencode($entry).'">Download ZIP</a>';
             echo '<form action="deleteFile.php" method="post" style="margin:0;">';
             echo '<input type="hidden" name="path" value="'.$path.'"><input type="hidden" name="fileName" value="'.$entry.'"><input type="hidden" name="currentUrl" value="'.$_SERVER['REQUEST_URI'].'"><input type="hidden" name="type" value="folder"><a onclick="this.parentNode.submit();">Delete</a>';
             echo '</form></div>';
@@ -176,7 +177,6 @@ if(isset($_GET["Pfad0"])){
             echo "<div class='card' tabindex='0' role='button' aria-label='Datei ".$entry."' data-name='".$entry."' oncontextmenu='openDropdown(this)' onclick='previewFile(\"".$entry."\", \"".$media."\")'><img loading='lazy' src='".$media."' alt='File icon'>";
             echo '<div class="dropdown-content">';
             echo '<a href="'.$path.'/'.$entry.'" download>Download</a>';
-            echo '<a href="downloadFolder.php?path='.urlencode($path).'&folder='.urlencode($entry).'">Download ZIP</a>';
             echo '<form action="deleteFile.php" method="post" style="margin:0;">';
             echo '<input type="hidden" name="path" value="'.$path.'"><input type="hidden" name="fileName" value="'.$entry.'"><input type="hidden" name="currentUrl" value="'.$_SERVER['REQUEST_URI'].'"><input type="hidden" name="type" value="file"><a onclick="this.parentNode.submit();">Delete</a>';
             echo '</form></div><div class="name">'.$entry.'</div></div>';
@@ -200,6 +200,16 @@ if(isset($_GET["Pfad0"])){
     });
     function openDropdown(x) { const m=x.querySelector('.dropdown-content'); if(m) m.classList.toggle('show'); }
     function openDropdownFolder(x) { const m=x.querySelector('.dropdown-content'); if(m) m.classList.toggle('show'); }
+    function openFolderCard(event, el){
+        if (event.target.closest('.dropdown-content')) return;
+        window.location.href = el.dataset.href;
+    }
+    function openFolderCardByKey(event, el){
+        if(event.key === 'Enter' || event.key === ' '){
+            event.preventDefault();
+            window.location.href = el.dataset.href;
+        }
+    }
     function previewFile(fileName, filePath){
         const modal = document.getElementById("previewModal");
         const body = document.getElementById("previewBody");
