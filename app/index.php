@@ -48,7 +48,7 @@
         #leftSidebar { position: fixed; right: 24px; bottom: 24px; }
         #leftSidebar img { width: 54px; height:54px; cursor:pointer; background: var(--accent); border-radius:50%; padding: 12px; box-shadow: 0 8px 20px rgba(0,0,0,.35); }
         #leftSidebar img:hover { background: var(--accent-soft); }
-        .modal { display:none; position:fixed; inset:0; background: rgba(0,0,0,.45); }
+        .modal { display:none; position:fixed; inset:0; background: rgba(0,0,0,.45); z-index: 9999; }
         .modal-content { width:min(420px,90%); margin: 15vh auto; background: #f8fafc; color:#0f172a; border-radius: 14px; padding: 16px; }
         .modal-content input { width:100%; padding:10px; margin-bottom: 10px; }
         #noContent { text-align:center; color:var(--muted); margin-top: 24px; }
@@ -90,8 +90,10 @@
             document.querySelectorAll('.grid').forEach(g => g.classList.toggle('list'));
             const btn = document.getElementById('viewToggle');
             const isList = btn.getAttribute('aria-pressed') === 'true';
-            btn.setAttribute('aria-pressed', String(!isList));
+            const newState = !isList;
+            btn.setAttribute('aria-pressed', String(newState));
             btn.innerText = isList ? 'List View' : 'Grid View';
+            localStorage.setItem('lancloud_view_list', newState ? '1' : '0');
         }
         function showToast(msg){
             const t = document.getElementById('toast');
@@ -174,6 +176,7 @@ if(isset($_GET["Pfad0"])){
             echo "<div class='card' tabindex='0' role='button' aria-label='Datei ".$entry."' data-name='".$entry."' oncontextmenu='openDropdown(this)' onclick='previewFile(\"".$entry."\", \"".$media."\")'><img loading='lazy' src='".$media."' alt='File icon'>";
             echo '<div class="dropdown-content">';
             echo '<a href="'.$path.'/'.$entry.'" download>Download</a>';
+            echo '<a href="downloadFolder.php?path='.urlencode($path).'&folder='.urlencode($entry).'">Download ZIP</a>';
             echo '<form action="deleteFile.php" method="post" style="margin:0;">';
             echo '<input type="hidden" name="path" value="'.$path.'"><input type="hidden" name="fileName" value="'.$entry.'"><input type="hidden" name="currentUrl" value="'.$_SERVER['REQUEST_URI'].'"><input type="hidden" name="type" value="file"><a onclick="this.parentNode.submit();">Delete</a>';
             echo '</form></div><div class="name">'.$entry.'</div></div>';
@@ -208,6 +211,14 @@ if(isset($_GET["Pfad0"])){
         modal.style.display = "block";
     }
     document.getElementById("closePreview").onclick = function(){ document.getElementById("previewModal").style.display = "none"; };
+    document.addEventListener("DOMContentLoaded", function(){
+        if(localStorage.getItem("lancloud_view_list") === "1"){
+            document.querySelectorAll(".grid").forEach(g => g.classList.add("list"));
+            const btn=document.getElementById("viewToggle");
+            btn.setAttribute("aria-pressed","true");
+            btn.innerText="Grid View";
+        }
+    });
 </script>
 </body>
 </html>
