@@ -186,7 +186,7 @@ if(isset($_GET["Pfad0"])){
     ?>
 </div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<div id="previewModal" class="modal"><div class="modal-content"><span class="close" id="closePreview" style="float:right;cursor:pointer;">&times;</span><div id="previewBody"></div></div></div>
+<div id="previewModal" class="modal"><div class="modal-content"><span class="close" id="closePreview" style="float:right;cursor:pointer;">&times;</span><div id="previewBody"></div><div id="previewActions" style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;"></div></div></div>
 <script>
     var modal = document.getElementById("myModal");
     document.getElementById("myBtn").onclick = function() { modal.style.display = "block"; };
@@ -213,14 +213,35 @@ if(isset($_GET["Pfad0"])){
     function previewFile(fileName, filePath){
         const modal = document.getElementById("previewModal");
         const body = document.getElementById("previewBody");
+        const actions = document.getElementById("previewActions");
         if(/\.(png|jpg|jpeg|gif|svg)$/i.test(fileName)){
             body.innerHTML = `<p><strong>${fileName}</strong></p><img src="${filePath}" style="max-width:100%;max-height:60vh;">`;
         } else {
             body.innerHTML = `<p><strong>${fileName}</strong></p><p>Keine Vorschau für diesen Dateityp.</p>`;
         }
+        actions.innerHTML = `
+            <a class="btn" href="${filePath}" download>Download</a>
+            <button class="btn" type="button" onclick="deleteFromPreview('${fileName.replace(/'/g, "\\'")}')">Delete</button>
+        `;
         modal.style.display = "block";
     }
+    function deleteFromPreview(fileName){
+        const form = document.createElement('form');
+        form.method = 'post';
+        form.action = 'deleteFile.php';
+        form.innerHTML = `
+            <input type="hidden" name="path" value="<?php echo htmlspecialchars($path, ENT_QUOTES); ?>">
+            <input type="hidden" name="fileName" value="${fileName}">
+            <input type="hidden" name="currentUrl" value="<?php echo htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES); ?>">
+            <input type="hidden" name="type" value="file">
+        `;
+        document.body.appendChild(form);
+        form.submit();
+    }
     document.getElementById("closePreview").onclick = function(){ document.getElementById("previewModal").style.display = "none"; };
+    document.getElementById("previewModal").addEventListener('click', function(event){
+        if(event.target === this){ this.style.display = "none"; }
+    });
     document.addEventListener("DOMContentLoaded", function(){
         if(localStorage.getItem("lancloud_view_list") === "1"){
             document.querySelectorAll(".grid").forEach(g => g.classList.add("list"));
