@@ -194,17 +194,6 @@
             setTimeout(()=>document.getElementById('copyPathBtn').innerText='⎘ Pfad kopieren',1200);
         }
     
-    function updateDetailsPanelForDirectory(){
-        document.getElementById("detailName").textContent = "<?php echo htmlspecialchars($currentFolderName, ENT_QUOTES); ?>";
-        document.getElementById("detailSubtitle").textContent = document.getElementById("currentPathText").innerText;
-        document.getElementById("detailDownload").setAttribute("href", "#");
-        document.getElementById("rowFolders").style.display = "flex";
-        document.getElementById("rowFiles").style.display = "flex";
-        document.getElementById("rowType").style.display = "none";
-        document.getElementById("rowSize").style.display = "none";
-    }
-    document.getElementById("detailCopy").addEventListener("click", function(){ navigator.clipboard.writeText(document.getElementById("detailName").textContent); showToast("Name kopiert"); });
-
 </script>
 </head>
 <body ondragover="highlightField();" ondragleave="normalizeField();">
