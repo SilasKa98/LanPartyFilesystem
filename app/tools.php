@@ -26,11 +26,11 @@ textarea{width:100%;min-height:120px;resize:vertical}.btn{background:#1f6fff;col
     <div class="row">
       <input id="teamSize" class="input" type="number" min="2" value="3" style="width:160px" placeholder="Teamgröße">
       <button class="btn" id="drawBtn">Teams auslosen</button>
-      <button class="btn ghost" id="demoBtn">Demo-Daten</button>
+      <button class="btn ghost" id="demoBtn">Demo-Daten</button><select id="tournamentType" class="input"><option value="single">Single Elimination</option><option value="double">Double Elimination (Light)</option><option value="roundrobin">Round Robin</option></select><button class="btn ghost" id="buildTournamentBtn">Turnierbaum erstellen</button>
     </div>
     <textarea id="players" placeholder="Namen, je Zeile&#10;Mia (8)&#10;Noah (6)&#10;...\n"></textarea>
     <div id="arena"></div>
-    <div id="result" class="team-grid"></div>
+    <div id="result" class="team-grid"></div><div id="tournament" class="team-grid" style="margin-top:16px"></div>
   </div>
 </main>
 </div>
@@ -72,6 +72,45 @@ function renderResult(teams){
   result.innerHTML='';
   teams.forEach((team,i)=>{const el=document.createElement('div');el.className='team';el.innerHTML=`<h3 style="color:${colors[i%colors.length]}">Team ${i+1}</h3><div class="meta">Gesamt-Skill: <strong>${team.skill}</strong></div><ul>${team.members.map(m=>`<li>${m.name} <small>(Skill ${m.skill})</small></li>`).join('')}</ul>`;result.appendChild(el);});
 }
+
+function pairSingle(teams){
+  const shuffled=shuffle(teams);
+  const rounds=[];
+  let current=shuffled.map((t,i)=>({name:'Team '+(i+1),skill:t.skill,members:t.members}));
+  while(current.length>1){
+    const matches=[];
+    for(let i=0;i<current.length;i+=2){
+      const a=current[i], b=current[i+1]||{name:'BYE',skill:0,members:[]};
+      matches.push({a,b});
+    }
+    rounds.push(matches);
+    current=matches.map(m=>m.b.name==='BYE'?m.a:(m.a.skill>=m.b.skill?m.a:m.b));
+  }
+  return rounds;
+}
+function renderTournament(teams){
+  const box=document.getElementById('tournament');
+  const mode=document.getElementById('tournamentType').value;
+  box.innerHTML='';
+  if(!teams.length){return;}
+  if(mode==='single'){
+    const rounds=pairSingle(teams);
+    rounds.forEach((matches,ri)=>{const col=document.createElement('div');col.className='team';col.innerHTML=`<h3>Runde ${ri+1}</h3>`+matches.map((m,mi)=>`<div class=\"meta\"><strong>Match ${mi+1}</strong><br>${m.a.name} (${m.a.skill}) vs ${m.b.name} (${m.b.skill})</div>`).join('<hr>');box.appendChild(col);});
+  } else if(mode==='double'){
+    const upper=pairSingle(teams);
+    const lowerTeams=teams.map((t,i)=>({name:'Team '+(i+1),skill:Math.max(1,t.skill-1),members:t.members}));
+    const lower=pairSingle(lowerTeams);
+    const up=document.createElement('div');up.className='team';up.innerHTML='<h3>Upper Bracket</h3>'+upper.flatMap((m,r)=>m.map((x,i)=>`<div class=\"meta\">R${r+1}M${i+1}: ${x.a.name} vs ${x.b.name}</div>`)).join('');
+    const low=document.createElement('div');low.className='team';low.innerHTML='<h3>Lower Bracket</h3>'+lower.flatMap((m,r)=>m.map((x,i)=>`<div class=\"meta\">R${r+1}M${i+1}: ${x.a.name} vs ${x.b.name}</div>`)).join('');
+    const fin=document.createElement('div');fin.className='team';fin.innerHTML='<h3>Finale</h3><div class=\"meta\">Gewinner Upper Bracket vs Gewinner Lower Bracket</div>';
+    box.append(up,low,fin);
+  } else {
+    const col=document.createElement('div');col.className='team';col.innerHTML='<h3>Round Robin</h3>';
+    for(let i=0;i<teams.length;i++){for(let j=i+1;j<teams.length;j++){const a='Team '+(i+1),b='Team '+(j+1);col.innerHTML+=`<div class=\"meta\">${a} vs ${b}</div>`;}}
+    box.appendChild(col);
+  }
+}
+
 document.getElementById('drawBtn').onclick=()=>{
   const players=parsePlayers(document.getElementById('players').value);
   const size=Math.max(2,parseInt(document.getElementById('teamSize').value||'3',10));
@@ -79,9 +118,10 @@ document.getElementById('drawBtn').onclick=()=>{
   const teams=balanceTeams(players,size);
   renderBalls(players);
   setTimeout(()=>animateToTeams(teams),500);
-  setTimeout(()=>renderResult(teams),1400);
+  setTimeout(()=>{renderResult(teams);window.lastTeams=teams;},1400);
 };
 document.getElementById('demoBtn').onclick=()=>{document.getElementById('players').value='Mia (8)\nNoah (6)\nLuca (4)\nEmma (9)\nFinn (5)\nLea (7)\nBen (3)\nNina (6)\nTom (8)';};
+document.getElementById('buildTournamentBtn').onclick=()=>{if(!window.lastTeams||!window.lastTeams.length){alert('Bitte zuerst Teams auslosen.');return;}renderTournament(window.lastTeams);};
 </script>
 </body>
 </html>
