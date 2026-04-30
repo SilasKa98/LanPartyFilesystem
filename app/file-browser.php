@@ -5,24 +5,24 @@
     <title>LocalLoot - File Browser</title>
     <style>
         :root {
-            --bg: #040a1f;
-            --bg-soft: #07143a;
-            --panel: rgba(8, 20, 52, 0.82);
-            --panel-soft: rgba(15, 36, 78, 0.9);
+            --bg: #f5f8ff;
+            --bg-soft: #eef4ff;
+            --panel: #ffffff;
+            --panel-soft: #ffffff;
             --panel-bright: rgba(20, 58, 122, 0.62);
             --border: #1a7fd4;
-            --border-soft: rgba(89, 189, 255, 0.45);
-            --text: #e7f4ff;
-            --muted: #8fc8ee;
-            --accent: #1ec7ff;
+            --border-soft: #dfe8fb;
+            --text: #0f2142;
+            --muted: #667a9a;
+            --accent: #1f6fff;
             --accent-soft: #1578ff;
             --warn: #ffd447;
             --glow: 0 0 0 1px rgba(30, 199, 255, 0.35), 0 0 20px rgba(30, 199, 255, 0.16);
         }
         * { box-sizing: border-box; }
-        body { margin: 0; font-family: "Inter", "Segoe UI", system-ui, Arial, sans-serif; background: radial-gradient(circle at 18% 12%, #0d2f6c 0%, var(--bg-soft) 30%, var(--bg) 65%, #01040f 100%); color: var(--text); min-height:100vh; line-height:1.45; }
+        body { margin: 0; font-family: "Inter", "Segoe UI", system-ui, Arial, sans-serif; background: var(--bg); color: var(--text); min-height:100vh; line-height:1.45; }
         #content { max-width: 1200px; margin: 0 auto; padding: 24px; }
-        .topbar { display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom: 16px; background: linear-gradient(90deg, rgba(7,24,62,.95), rgba(5,16,42,.85)); border: 1px solid var(--border-soft); box-shadow: var(--glow); padding: 14px 16px; border-radius: 14px; }
+         .app-shell{display:grid;grid-template-columns:300px 1fr 340px;min-height:100vh;} .sidebar{background:#fff;border-right:1px solid #e2e9f7;padding:22px;} .side-link{display:block;padding:12px 14px;border-radius:10px;color:#2e4468;text-decoration:none;font-weight:600;margin:4px 0;} .side-link.active{background:#edf3ff;color:#1f6fff;} .rightpanel{background:#fff;border-left:1px solid #e2e9f7;padding:20px;} .stats{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:12px;margin:12px 0 16px;} .stat{background:#fff;border:1px solid #e2e9f7;border-radius:14px;padding:14px;} .topbar { display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom: 16px; background: linear-gradient(90deg, rgba(7,24,62,.95), rgba(5,16,42,.85)); border: 1px solid var(--border-soft); box-shadow: var(--glow); padding: 14px 16px; border-radius: 14px; }
         .brand { display:flex; align-items:center; gap:10px; }
         .brand-logo { width:44px; height:44px; border-radius:10px; background:rgba(11,41,84,.75); padding:4px; object-fit:contain; box-shadow: inset 0 0 16px rgba(30,199,255,.25); }
         h1 { margin:0; font-size: 1.5rem; letter-spacing: .01em; text-shadow: 0 0 10px rgba(34, 198, 255, .28); font-weight:700; }
@@ -31,7 +31,7 @@
         .input::placeholder { color:#c6e7ff; opacity:.95; }
         .btn { cursor:pointer; }
         .btn:hover { border-color: var(--accent); box-shadow: 0 0 14px rgba(30, 199, 255, 0.35); }
-        #uploadWrapper { border: 2px dashed var(--border-soft); border-radius: 16px; background: linear-gradient(160deg, rgba(6, 20, 55, .95), rgba(9, 29, 72, .75)); padding: 24px; text-align: center; margin-bottom: 16px; transition: .2s ease; box-shadow: var(--glow); }
+        #uploadWrapper { border: 1px dashed #cddaf5; border-radius: 16px; background: #fff; padding: 24px; text-align: center; margin-bottom: 16px; transition: .2s ease; box-shadow: var(--glow); }
         #uploadWrapper .helper { color: var(--muted); }
         #uploadFile { width: 100%; height: 48px; opacity: 0; cursor: pointer; position:absolute; inset:0; }
         .uploadInputWrap { position:relative; height: 48px; margin-top: 10px; }
@@ -44,16 +44,16 @@
         .crumb-target { padding: 2px 4px; border-radius:6px; transition: .18s ease; }
         .crumb-target.drag-over { background: rgba(97,228,255,.2); box-shadow: 0 0 0 1px rgba(97,228,255,.4); }
         @keyframes breadcrumbPulse { from { box-shadow: 0 0 0 rgba(97,228,255,.1); } to { box-shadow: 0 0 16px rgba(97,228,255,.28); } }
-        .section-title { margin: 18px 0 8px; color: #c4e9ff; font-size: 1rem; font-weight:700; letter-spacing:.02em; }
+        .section-title { margin: 18px 0 8px; color: #4b607f; font-size: 1rem; font-weight:700; letter-spacing:.02em; }
         .grid { display:grid; grid-template-columns: repeat(auto-fill,minmax(150px,1fr)); gap: 12px; }
         .grid.list { display:flex; flex-direction:column; }
         .grid.list .card { flex-direction:row; justify-content:flex-start; align-items:center; min-height:64px; gap:12px; }
         .grid.list .name { text-align:left; }
-        .card { background: linear-gradient(160deg, var(--panel) 0%, var(--panel-soft) 100%); border:1px solid var(--border-soft); border-radius: 14px; padding: 10px; min-height: 130px; display:flex; flex-direction:column; align-items:center; justify-content:space-between; transition:.2s ease; position:relative; box-shadow: inset 0 0 30px rgba(14, 57, 121, 0.25); }
+        .card { background: #fff; border:1px solid #e2e9f7; border-radius: 14px; padding: 10px; min-height: 130px; display:flex; flex-direction:column; align-items:center; justify-content:space-between; transition:.2s ease; position:relative; box-shadow: inset 0 0 30px rgba(14, 57, 121, 0.25); }
         .card:hover { transform: translateY(-2px); border-color:#56d9ff; box-shadow: var(--glow); }
         .card img { width:56px; height:56px; object-fit:contain; }
         .card:focus { outline:2px solid var(--accent); outline-offset:2px; }
-        .name { font-size: .9rem; text-align:center; overflow-wrap:anywhere; font-weight:600; color:#eaf5ff; text-shadow: 0 0 6px rgba(10, 39, 78, .45); }
+        .name { font-size: .95rem; text-align:center; overflow-wrap:anywhere; font-weight:600; color:#1a2f53; text-shadow: 0 0 6px rgba(10, 39, 78, .45); }
         .folder-card { min-height: 100px; }
         .folder-card.drag-over { border-color: #61e4ff; box-shadow: 0 0 0 2px rgba(97,228,255,.35), 0 0 22px rgba(30,199,255,.35); }
         .dropdown-content { display:none; position:absolute; top:8px; right:8px; background:#040f2a; border:1px solid var(--border-soft); border-radius:8px; overflow:hidden; z-index:2; }
@@ -208,10 +208,9 @@ if(isset($_GET["Pfad0"])){
     $path = "../mainStorage";
 }
 ?>
-<div id='leftSidebar'><img src='../media/folder-plus.svg' id="myBtn"></div>
 <div id="myModal" class="modal"><div class="modal-content"><span class="close" style="float:right;cursor:pointer;">&times;</span><p>Neuer Ordner</p><form action="createFolder.php" method='post'><input type="text" pattern="[^|,/:?*\\]+" value="unbenannter Ordner" name="folderName" required><input type="hidden" name="path" value="<?php echo $path; ?>"><input type="hidden" value="<?php echo $_SERVER['REQUEST_URI']; ?>" name="currentUrl"><button class="btn" type="submit">Erstellen</button><button class="btn" id="cancelNewFolder" type="button">Abbrechen</button></form></div></div>
-<div id="content">
-    <div class="topbar"><div class="brand"><img src="../media/folder-open.svg" class="brand-logo" alt="LocalLoot Logo"><h1>LocalLoot</h1></div><div class="toolbar"><button class="btn" onclick="history.back()">⟵ Zurück</button><div class="search-wrap"><input id="searchInput" class="input" placeholder="Dateien/Ordner global suchen" oninput="filterEntriesDebounced();searchAllPaths()"><div id="searchResults" class="search-results"></div></div><select id="sortSelect" class="input" onchange="sortEntries()"><option value="nameAsc">Name A-Z</option><option value="nameDesc">Name Z-A</option></select><button id="viewToggle" class="btn" onclick="toggleView()" aria-pressed="false">☰ List View</button><button id="copyPathBtn" class="btn" onclick="copyCurrentPath()">⎘ Pfad kopieren</button></div></div>
+<div class="app-shell"><aside class="sidebar"><div class="brand" style="margin-bottom:18px;"><img src="../media/folder-open.svg" class="brand-logo" alt="LocalLoot Logo"><div><h1 style="font-size:2.1rem;">LocalLoot</h1><div style="color:#6d7f9d;">Local file & game sharing for LAN parties</div></div></div><div style="color:#7e8eaa;font-size:.85rem;margin:12px 0;">QUICK ACCESS</div><a class="side-link" href="index.php">Dashboard</a><a class="side-link active" href="file-browser.php">Shared Files</a><a class="side-link" href="#">Game Library</a><a class="side-link" href="#">Chat</a><a class="side-link" href="#">Server Status</a></aside><main><div id="content">
+    <div class="topbar"><div class="brand"><img src="../media/folder-open.svg" class="brand-logo" alt="LocalLoot Logo"><h1>LocalLoot</h1></div><div class="toolbar"><button class="btn" onclick="history.back()">← Dashboard</button><div class="search-wrap"><input id="searchInput" class="input" placeholder="Dateien/Ordner global suchen" oninput="filterEntriesDebounced();searchAllPaths()"><div id="searchResults" class="search-results"></div></div><select id="sortSelect" class="input" onchange="sortEntries()"><option value="nameAsc">Name A-Z</option><option value="nameDesc">Name Z-A</option></select><button id="viewToggle" class="btn" onclick="toggleView()" aria-pressed="false">☰ List View</button><button id="myBtn" class="btn" type="button">+ New Folder</button><button id="copyPathBtn" class="btn" onclick="copyCurrentPath()">⎘ Pfad kopieren</button></div></div>
     <div id="uploadWrapper"><div class="helper">Drag & drop files here or click to browse.</div><div id="uploadStatus" class="helper"></div><form method="post" action="uploadFiles.php" enctype="multipart/form-data"><div class="uploadInputWrap"><div class="uploadButtonFake">Choose files</div><input id="uploadFile" type="file" onchange="changeText(this);" name="files[]" multiple></div><input type="hidden" value="<?php echo $path; ?>" name="path"><input type="hidden" value="<?php echo $_SERVER['REQUEST_URI']; ?>" name="currentUrl"></form></div>
 
     <div id="breadcrumb"><span id="currentPathText"><?php
@@ -272,12 +271,13 @@ if(isset($_GET["Pfad0"])){
     }
     print "</div>";
     ?>
-</div>
+</div></main><aside class="rightpanel"><h3 style="margin-top:0;">File Details</h3><p style="color:#6c7d98;">Wähle eine Datei für Detailinfos und schnelle Aktionen.</p><div style="display:grid;gap:10px;"><a class="btn" href="#">Download</a><a class="btn" href="#">Copy Link</a></div></aside></div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <div id="previewModal" class="modal"><div class="modal-content"><span class="close" id="closePreview" style="float:right;cursor:pointer;">&times;</span><div id="previewBody"></div><div id="previewActions" style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;"></div></div></div>
 <script>
     var modal = document.getElementById("myModal");
-    document.getElementById("myBtn").onclick = function() { modal.style.display = "block"; };
+    var openFolderBtn = document.getElementById("myBtn");
+    if (openFolderBtn) { openFolderBtn.onclick = function() { modal.style.display = "block"; }; }
     document.getElementById("cancelNewFolder").onclick = function() { modal.style.display = "none"; };
     document.getElementsByClassName("close")[0].onclick = function() { modal.style.display = "none"; };
     window.addEventListener('click', function(event) {
