@@ -5,9 +5,9 @@
   <title>LocalLoot Chat</title>
   <style>
     body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:#f4f8ff;color:#0b1b3a}
-    .wrap{max-width:1250px;margin:0 auto;padding:18px}
-    .layout{display:grid;grid-template-columns:320px 1fr;gap:14px;min-height:82vh}
-    .panel{background:#fff;border:1px solid #dbe7ff;border-radius:14px;padding:12px}
+    .wrap{width:100%;padding:0}.app-shell{display:grid;grid-template-columns:300px 1fr;min-height:100vh}.chat-main{padding:18px}
+    .layout{display:block}
+    .panel{background:#fff;border:1px solid #dbe7ff;border-radius:14px;padding:12px}.sidebar{border-right:1px solid #e2e9f7;border-radius:0;border-left:0;border-top:0;border-bottom:0;min-height:100vh}
     .sidebar-brand{display:flex;gap:10px;align-items:center;text-decoration:none;color:inherit;margin-bottom:14px}
     .sidebar-brand img{width:44px;height:44px;border-radius:10px;background:#e8f0ff;padding:5px;object-fit:contain}
     .module-links{margin-bottom:12px}
@@ -37,13 +37,12 @@
     #emojiPanel{position:absolute;bottom:46px;right:0;background:#fff;border:1px solid #dbe7ff;border-radius:10px;padding:8px;display:none;grid-template-columns:repeat(8,1fr);gap:6px;width:280px;box-shadow:0 8px 25px rgba(0,0,0,.12)}
     .emoji{cursor:pointer;background:#fff;border:1px solid #eef3ff;border-radius:8px;padding:6px;text-align:center}
     #nameGate{position:fixed;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center}.gateCard{background:#fff;padding:20px;border-radius:14px;width:min(460px,94vw)}
-    @media (max-width:900px){.layout{grid-template-columns:1fr}}
+    @media (max-width:900px){.app-shell{grid-template-columns:1fr}.sidebar{min-height:auto;border-right:0}.chat-main{padding:12px}}
   </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="layout">
-    <aside class="panel">
+<div class="wrap"><div class="app-shell">
+    <aside class="panel sidebar">
       <a class="sidebar-brand" href="index.php"><img src="../media/LocalLoot_logo.png" alt="LocalLoot Logo"><div><strong style="font-size:1.2rem">LocalLoot</strong><div class="muted">Local file & game sharing</div></div></a>
       <div class="module-links"><a class="side-link" href="file-browser.php">📁 Files</a><a class="side-link" href="#">🎮 Game Library</a><a class="side-link active" href="chat.php">💬 Chat</a><a class="side-link" href="#">🖥️ Server Status</a></div>
       <h3 style="margin:8px 0 8px">Chats</h3>
@@ -52,13 +51,12 @@
       <div id="rooms" class="rooms"></div>
     </aside>
 
-    <section class="panel">
+    <main class="chat-main"><section class="panel">
       <div class="muted" id="roomLabel" style="margin-bottom:6px">Kein Raum ausgewählt</div>
       <div id="chatBox"><div class="muted">Bitte links einen Chat auswählen oder erstellen.</div></div>
       <form id="chatForm"><input id="text" maxlength="600" placeholder="Nachricht schreiben..." required><div class="emojiWrap"><button id="emojiToggle" type="button" class="secondary">😊</button><div id="emojiPanel"></div></div><button type="submit">Senden</button></form>
-    </section>
-  </div>
-</div>
+    </section></main>
+  </div></div>
 <div id="nameGate"><div class="gateCard"><h3>Willkommen im Chat</h3><p class="muted">Bitte gib deinen Namen ein, um fortzufahren.</p><div class="row"><input id="nameInput" maxlength="40" placeholder="Dein Name" style="flex:1"><button id="continueBtn" type="button">Weiter</button></div></div></div>
 <audio id="notifAudio" preload="auto"><source src="data:audio/wav;base64,UklGRlQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YTAAAAAAAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA" type="audio/wav"></audio>
 <script src="chat_notifier.js"></script>
@@ -241,7 +239,7 @@ document.addEventListener('visibilitychange',()=>{if(username){pollVisitedRooms(
     if(r){openChat(r);} 
   }
 })();
-document.getElementById('protectToggle').addEventListener('change',(e)=>{document.getElementById('newRoomPassword').style.display=e.target.checked?'block':'none';});
+document.getElementById('protectToggle').addEventListener('change',(e)=>{document.getElementById('passwordWrap').style.display=e.target.checked?'block':'none';if(!e.target.checked){document.getElementById('newRoomPassword').value='';}});
 
 
 </script>
