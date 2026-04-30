@@ -23,7 +23,9 @@
         body { margin: 0; font-family: "Inter", "Segoe UI", system-ui, Arial, sans-serif; background: radial-gradient(circle at 18% 12%, #0d2f6c 0%, var(--bg-soft) 30%, var(--bg) 65%, #01040f 100%); color: var(--text); min-height:100vh; line-height:1.45; }
         #content { max-width: 1200px; margin: 0 auto; padding: 24px; }
         .topbar { display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom: 16px; background: linear-gradient(90deg, rgba(7,24,62,.95), rgba(5,16,42,.85)); border: 1px solid var(--border-soft); box-shadow: var(--glow); padding: 14px 16px; border-radius: 14px; }
-        h1 { margin:0; font-size: 1.65rem; text-transform: uppercase; letter-spacing: .04em; text-shadow: 0 0 10px rgba(34, 198, 255, .28); font-weight:700; }
+        .brand { display:flex; align-items:center; gap:10px; }
+        .brand-logo { width:44px; height:44px; border-radius:10px; background:rgba(11,41,84,.75); padding:8px; box-shadow: inset 0 0 16px rgba(30,199,255,.25); }
+        h1 { margin:0; font-size: 1.5rem; letter-spacing: .01em; text-shadow: 0 0 10px rgba(34, 198, 255, .28); font-weight:700; }
         .toolbar { display:flex; gap:10px; align-items:center; }
         .input, .btn { border:1px solid var(--border-soft); background: linear-gradient(180deg, rgba(18, 48, 96, 0.95), rgba(7, 23, 56, 0.95)); color: #eef8ff; border-radius: 10px; padding: 10px 12px; box-shadow: inset 0 0 12px rgba(31, 112, 183, 0.3); font-size:.95rem; font-weight:600; }
         .input::placeholder { color:#c6e7ff; opacity:.95; }
@@ -55,9 +57,14 @@
         .folder-card { min-height: 100px; }
         .folder-card.drag-over { border-color: #61e4ff; box-shadow: 0 0 0 2px rgba(97,228,255,.35), 0 0 22px rgba(30,199,255,.35); }
         .dropdown-content { display:none; position:absolute; top:8px; right:8px; background:#040f2a; border:1px solid var(--border-soft); border-radius:8px; overflow:hidden; z-index:2; }
-        .dropdown-content a { display:block; color:var(--text); text-decoration:none; padding:8px 10px; font-size:.85rem; }
-        .dropdown-content a:hover { background:#1e293b; }
+        .dropdown-content a { display:block; color:#071326; text-decoration:none; padding:8px 10px; font-size:.85rem; background:#d9efff; }
+        .dropdown-content a:hover { background:#bfe5ff; }
         .show { display:block; }
+        .search-wrap { position:relative; }
+        .search-results { display:none; position:absolute; top: calc(100% + 6px); left:0; right:0; max-height:340px; overflow:auto; background:#ecf7ff; border:1px solid #84cfff; border-radius:10px; z-index:40; padding:8px; color:#071326; }
+        .search-results.show { display:block; }
+        .search-node { padding:6px 8px; border-radius:6px; cursor:pointer; font-size:.9rem; color:#071326; }
+        .search-node:hover { background:#d5edff; }
         #leftSidebar { position: fixed; right: 24px; bottom: 24px; }
         #leftSidebar img { width: 54px; height:54px; cursor:pointer; background: linear-gradient(180deg, var(--accent), var(--accent-soft)); border-radius:50%; padding: 12px; box-shadow: 0 0 18px rgba(30,199,255,.55); }
         #leftSidebar img:hover { filter: brightness(1.08); }
@@ -110,6 +117,27 @@
         }
         function debounce(fn, wait) { let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args),wait); }; }
         const filterEntriesDebounced = debounce(filterEntries, 120);
+        async function searchAllPaths(){
+            const q = document.getElementById('searchInput').value.trim();
+            const box = document.getElementById('searchResults');
+            if(q.length < 2){ box.classList.remove('show'); box.innerHTML=''; return; }
+            const res = await fetch('searchTree.php?q=' + encodeURIComponent(q));
+            const data = await res.json();
+            renderSearchResults(data.results || []);
+        }
+        function renderSearchResults(results){
+            const box = document.getElementById('searchResults');
+            if(!results.length){ box.innerHTML = '<div class=\"search-node\">Keine Treffer</div>'; box.classList.add('show'); return; }
+            box.innerHTML = results.map(item => {
+                const depth = (item.relativePath.match(/\\//g) || []).length;
+                const icon = item.type === 'folder' ? '📁' : '📄';
+                const url = item.type === 'folder'
+                    ? 'index.php?' + item.relativePath.split('/').map((s, i) => 'Pfad'+i+'='+encodeURIComponent(s)).join('&')
+                    : '#';
+                return `<div class=\"search-node\" style=\"padding-left:${8 + depth*16}px\" data-url=\"${url}\" data-type=\"${item.type}\" data-path=\"${item.relativePath}\">${icon} ${item.relativePath}</div>`;
+            }).join('');
+            box.classList.add('show');
+        }
         function sortEntries(){
             document.querySelectorAll('.grid').forEach(grid => {
                 const cards = [...grid.querySelectorAll('.card')];
@@ -162,7 +190,7 @@ if(isset($_GET["Pfad0"])){
 <div id='leftSidebar'><img src='../media/folder-plus.svg' id="myBtn"></div>
 <div id="myModal" class="modal"><div class="modal-content"><span class="close" style="float:right;cursor:pointer;">&times;</span><p>Neuer Ordner</p><form action="createFolder.php" method='post'><input type="text" pattern="[^|,/:?*\\]+" value="unbenannter Ordner" name="folderName" required><input type="hidden" name="path" value="<?php echo $path; ?>"><input type="hidden" value="<?php echo $_SERVER['REQUEST_URI']; ?>" name="currentUrl"><button class="btn" type="submit">Erstellen</button><button class="btn" id="cancelNewFolder" type="button">Abbrechen</button></form></div></div>
 <div id="content">
-    <div class="topbar"><h1>◉ Lan Cloud Matrix</h1><div class="toolbar"><button class="btn" onclick="history.back()">⟵ Zurück</button><input id="searchInput" class="input" placeholder="Dateien/Ordner suchen" oninput="filterEntriesDebounced()"><select id="sortSelect" class="input" onchange="sortEntries()"><option value="nameAsc">Name A-Z</option><option value="nameDesc">Name Z-A</option></select><button id="viewToggle" class="btn" onclick="toggleView()" aria-pressed="false">☰ List View</button><button id="copyPathBtn" class="btn" onclick="copyCurrentPath()">⎘ Pfad kopieren</button></div></div>
+    <div class="topbar"><div class="brand"><img src="../media/folder-open.svg" class="brand-logo" alt="LanPartyFilesystem Logo"><h1>LanPartyFilesystem</h1></div><div class="toolbar"><button class="btn" onclick="history.back()">⟵ Zurück</button><div class="search-wrap"><input id="searchInput" class="input" placeholder="Dateien/Ordner global suchen" oninput="filterEntriesDebounced();searchAllPaths()"><div id="searchResults" class="search-results"></div></div><select id="sortSelect" class="input" onchange="sortEntries()"><option value="nameAsc">Name A-Z</option><option value="nameDesc">Name Z-A</option></select><button id="viewToggle" class="btn" onclick="toggleView()" aria-pressed="false">☰ List View</button><button id="copyPathBtn" class="btn" onclick="copyCurrentPath()">⎘ Pfad kopieren</button></div></div>
     <div id="uploadWrapper"><div class="helper">Drag & drop files here or click to browse.</div><div id="uploadStatus" class="helper"></div><form method="post" action="uploadFiles.php" enctype="multipart/form-data"><div class="uploadInputWrap"><div class="uploadButtonFake">Choose files</div><input id="uploadFile" type="file" onchange="changeText(this);" name="files[]" multiple></div><input type="hidden" value="<?php echo $path; ?>" name="path"><input type="hidden" value="<?php echo $_SERVER['REQUEST_URI']; ?>" name="currentUrl"></form></div>
 
     <div id="breadcrumb"><span id="currentPathText"><?php
@@ -233,6 +261,14 @@ if(isset($_GET["Pfad0"])){
     document.getElementsByClassName("close")[0].onclick = function() { modal.style.display = "none"; };
     window.addEventListener('click', function(event) {
         if (event.target == modal) modal.style.display = "none";
+        if (!event.target.closest('.search-wrap')) {
+            document.getElementById('searchResults').classList.remove('show');
+        }
+        if (event.target.classList && event.target.classList.contains('search-node')) {
+            if (event.target.dataset.type === 'folder') {
+                window.location.href = event.target.dataset.url;
+            }
+        }
         if (!event.target.matches('.card, .card *')) {
             document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
         }
