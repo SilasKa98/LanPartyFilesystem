@@ -56,11 +56,12 @@
         .name { font-size: .95rem; text-align:center; overflow-wrap:anywhere; font-weight:600; color:#1a2f53; text-shadow: 0 0 6px rgba(10, 39, 78, .45); }
         .folder-card { min-height: 100px; }
         .folder-card.drag-over { border-color: #61e4ff; box-shadow: 0 0 0 2px rgba(97,228,255,.35), 0 0 22px rgba(30,199,255,.35); }
-        .dropdown-content { display:none; position:absolute; top:34px; right:8px; background:#040f2a; border:1px solid var(--border-soft); border-radius:8px; overflow:hidden; z-index:2; }
+        .dropdown-content { display:none; position:absolute; top:34px; right:8px; min-width:160px; background:#ffffff; border:1px solid #d6e3fb; border-radius:12px; overflow:hidden; z-index:2500; box-shadow:0 14px 30px rgba(22,62,132,.2); }
         .card-menu-btn { position:absolute; top:8px; right:8px; width:28px; height:28px; border-radius:8px; border:1px solid #d9e4fa; background:#fff; color:#36527c; font-weight:700; cursor:pointer; display:grid; place-items:center; }
         .card-menu-btn:hover { border-color:#1f6fff; color:#1f6fff; }
-        .dropdown-content a { display:block; color:#071326; text-decoration:none; padding:8px 10px; font-size:.85rem; background:#d9efff; }
-        .dropdown-content a:hover { background:#bfe5ff; }
+        .dropdown-content a { display:block; color:#1b3763; text-decoration:none; padding:10px 12px; font-size:.88rem; background:#ffffff; border-bottom:1px solid #edf2fc; }
+        .dropdown-content a:hover { background:#eff5ff; }
+        .dropdown-content form:last-child a { border-bottom:none; }
         .show { display:block; }
         .search-wrap { position:relative; }
         .search-results { display:none; position:absolute; top: calc(100% + 6px); left:0; right:0; max-height:340px; overflow:auto; background:#ecf7ff; border:1px solid #84cfff; border-radius:10px; z-index:40; padding:8px; color:#071326; }
@@ -73,8 +74,10 @@
         .folder-card img, .card img { filter: brightness(0) saturate(100%) invert(73%) sepia(39%) saturate(1592%) hue-rotate(165deg) brightness(103%) contrast(102%); }
         .card img[alt='File icon'][src*='/mainStorage/'] { filter: none; }
         .modal { display:none; position:fixed; inset:0; background: rgba(0,0,0,.45); z-index: 9999; }
-        .modal-content { width:min(420px,90%); margin: 15vh auto; background: #e7f4ff; color:#09203f; border-radius: 14px; padding: 16px; border:1px solid #62c7ff; }
-        .modal-content input { width:100%; padding:10px; margin-bottom: 10px; }
+        .modal-content { width:min(460px,92%); margin: 12vh auto; background:#ffffff; color:#1a2f53; border-radius: 16px; padding: 18px; border:1px solid #d6e3fb; box-shadow:0 20px 50px rgba(17,43,92,.24); }
+        .modal-content p { margin:0 0 12px; font-weight:700; color:#1b3763; }
+        .modal-content input { width:100%; padding:11px 12px; margin-bottom: 12px; border:1px solid #d9e4fa; border-radius:10px; font:inherit; color:#1b3763; background:#fff; }
+        .modal-actions { display:flex; gap:10px; justify-content:flex-end; }
         #noContent { text-align:center; color:var(--muted); margin-top: 24px; }
         .toast { position:fixed; left:50%; transform:translateX(-50%); bottom:20px; background:#ffffff; border:1px solid #d6e3fb; color:#1b3763; padding:10px 14px; border-radius:12px; display:none; z-index:10; box-shadow:0 10px 26px rgba(22,62,132,.18); font-weight:600; }
     </style>
@@ -211,7 +214,7 @@ if(isset($_GET["Pfad0"])){
     $path = "../mainStorage";
 }
 ?>
-<div id="myModal" class="modal"><div class="modal-content"><span class="close" style="float:right;cursor:pointer;">&times;</span><p>Neuer Ordner</p><form action="createFolder.php" method='post'><input type="text" pattern="[^|,/:?*\\]+" value="unbenannter Ordner" name="folderName" required><input type="hidden" name="path" value="<?php echo $path; ?>"><input type="hidden" value="<?php echo $_SERVER['REQUEST_URI']; ?>" name="currentUrl"><button class="btn" type="submit">Erstellen</button><button class="btn" id="cancelNewFolder" type="button">Abbrechen</button></form></div></div>
+<div id="myModal" class="modal"><div class="modal-content"><span class="close" style="float:right;cursor:pointer;font-size:1.2rem;color:#4f678c;">&times;</span><p>Neuer Ordner</p><form action="createFolder.php" method='post'><input type="text" pattern="[^|,/:?*\\]+" value="unbenannter Ordner" name="folderName" required><input type="hidden" name="path" value="<?php echo $path; ?>"><input type="hidden" value="<?php echo $_SERVER['REQUEST_URI']; ?>" name="currentUrl"><div class="modal-actions"><button class="btn" id="cancelNewFolder" type="button">Abbrechen</button><button class="btn primary" type="submit">Erstellen</button></div></form></div></div>
 <div class="app-shell"><aside class="sidebar"><a href="index.php" class="brand" style="margin-bottom:18px;text-decoration:none;"><img src="../media/folder-open.svg" class="brand-logo" alt="LocalLoot Logo"><div><h1 style="font-size:2.1rem;">LocalLoot</h1><div style="color:#6d7f9d;">Local file & game sharing for LAN parties</div></div></a><div style="margin-top:16px;color:#7e8eaa;font-size:.85rem;">MODULES</div><a class="side-link active" href="file-browser.php">📁 Files</a><a class="side-link" href="#">🎮 Game Library</a><a class="side-link" href="#">💬 Chat</a><a class="side-link" href="#">🖥️ Server Status</a><div class="side-tools"><div class="search-wrap"><input id="searchInput" class="input" placeholder="Dateien/Ordner global suchen" oninput="filterEntriesDebounced();searchAllPaths()"><div id="searchResults" class="search-results"></div></div><select id="sortSelect" class="input" onchange="sortEntries()"><option value="nameAsc">Name A-Z</option><option value="nameDesc">Name Z-A</option></select><button id="viewToggle" class="btn" onclick="toggleView()" aria-pressed="false">☰ List View</button><button id="myBtn" class="btn" type="button">+ New Folder</button><button id="copyPathBtn" class="btn" onclick="copyCurrentPath()">⎘ Pfad kopieren</button></div></aside><main><div id="content">
     <div class="topbar"><div class="toolbar"><strong>Shared Files</strong></div></div>
     <div id="uploadWrapper"><div class="helper">Drag & drop files here or click to browse.</div><div id="uploadStatus" class="helper"></div><form method="post" action="uploadFiles.php" enctype="multipart/form-data"><div class="uploadInputWrap"><div class="uploadButtonFake">Choose files</div><input id="uploadFile" type="file" onchange="changeText(this);" name="files[]" multiple></div><input type="hidden" value="<?php echo $path; ?>" name="path"><input type="hidden" value="<?php echo $_SERVER['REQUEST_URI']; ?>" name="currentUrl"></form></div>
