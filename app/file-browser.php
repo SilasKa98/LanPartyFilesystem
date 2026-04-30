@@ -140,8 +140,8 @@
             box.innerHTML = '';
             const buildUrlFromSegments = (segments) => {
                 const parts = Array.isArray(segments) ? segments.filter(Boolean) : [];
-                if (!parts.length) return 'index.php';
-                return 'index.php?' + parts.map((s, i) => 'Pfad' + i + '=' + encodeURIComponent(s)).join('&');
+                if (!parts.length) return 'file-browser.php';
+                return 'file-browser.php?' + parts.map((s, i) => 'Pfad' + i + '=' + encodeURIComponent(s)).join('&');
             };
             results.forEach(item => {
                 const segments = Array.isArray(item.pathSegments) ? item.pathSegments : [];
