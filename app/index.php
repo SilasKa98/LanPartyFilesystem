@@ -36,6 +36,12 @@
         .uploadButtonFake { height:48px; border-radius:10px; display:grid; place-items:center; background: var(--panel-soft); border:1px solid var(--border-soft); }
         #breadcrumb { margin: 12px 0; color: var(--muted); }
         #breadcrumb a { color: #c7d2fe; text-decoration:none; }
+        #breadcrumb.drag-active { padding: 10px 12px; border: 1px dashed var(--border-soft); border-radius: 10px; background: rgba(10, 32, 70, 0.55); animation: breadcrumbPulse .9s ease-in-out infinite alternate; }
+        #breadcrumb.drag-active .crumb-dropzone { display: inline-flex; }
+        .crumb-dropzone { display:none; align-items:center; margin-left: 8px; padding: 4px 8px; border-radius: 8px; border:1px solid rgba(97,228,255,.4); color:#d8f3ff; font-size:.82rem; }
+        .crumb-target { padding: 2px 4px; border-radius:6px; transition: .18s ease; }
+        .crumb-target.drag-over { background: rgba(97,228,255,.2); box-shadow: 0 0 0 1px rgba(97,228,255,.4); }
+        @keyframes breadcrumbPulse { from { box-shadow: 0 0 0 rgba(97,228,255,.1); } to { box-shadow: 0 0 16px rgba(97,228,255,.28); } }
         .section-title { margin: 18px 0 8px; color: #c4e9ff; font-size: 1rem; font-weight:700; letter-spacing:.02em; }
         .grid { display:grid; grid-template-columns: repeat(auto-fill,minmax(150px,1fr)); gap: 12px; }
         .grid.list { display:flex; flex-direction:column; }
@@ -161,6 +167,8 @@ if(isset($_GET["Pfad0"])){
 
     <div id="breadcrumb"><span id="currentPathText"><?php
         if(isset($_GET["Pfad0"])){
+            $absRoot = realpath("../mainStorage");
+            $navPath = $absRoot;
             for($i=0;$i<$cntPath;$i++){
                 error_reporting(E_ERROR | E_PARSE);
                 $removeFrom = explode("&",$_SERVER['REQUEST_URI']);
@@ -168,11 +176,12 @@ if(isset($_GET["Pfad0"])){
                 $pathDeletePart = "&".substr($_SERVER['REQUEST_URI'], $postionInUrl);
                 $pathBack = str_replace($pathDeletePart, "", $_SERVER['REQUEST_URI']);
                 $pfadName = "Pfad".$i;
-                if($i <= 0){ print "<a href='index.php'>mainStorage</a>"; }
-                print " → <a href='".$pathBack."'>".$_GET[$pfadName]."</a>";
+                if($i <= 0){ print "<a class='crumb-target' data-path='".htmlspecialchars($absRoot, ENT_QUOTES)."' href='index.php'>mainStorage</a>"; }
+                $navPath .= "/".$_GET[$pfadName];
+                print " → <a class='crumb-target' data-path='".htmlspecialchars($navPath, ENT_QUOTES)."' href='".$pathBack."'>".$_GET[$pfadName]."</a>";
             }
-        }else{ print $path; }
-    ?></span></div>
+        }else{ print "<span class='crumb-target' data-path='".htmlspecialchars(realpath($path), ENT_QUOTES)."'>".$path."</span>"; }
+    ?></span><span class="crumb-dropzone">⬆ Datei auf Breadcrumb ziehen, um Ebene nach oben zu verschieben</span></div>
 
     <?php
     $scanned_directory = array_values(array_diff(scandir($path), array('..', '.')));
@@ -255,15 +264,15 @@ if(isset($_GET["Pfad0"])){
         `;
         modal.style.display = "block";
     }
-    function moveFileToFolder(fileName, targetFolder){
-        if(!fileName || !targetFolder) return;
+    function moveFileToTargetPath(fileName, targetPath){
+        if(!fileName || !targetPath) return;
         const form = document.createElement('form');
         form.method = 'post';
         form.action = 'moveFile.php';
         form.innerHTML = `
-            <input type="hidden" name="path" value="<?php echo htmlspecialchars($path, ENT_QUOTES); ?>">
             <input type="hidden" name="fileName" value="${fileName}">
-            <input type="hidden" name="targetFolder" value="${targetFolder}">
+            <input type="hidden" name="sourcePath" value="<?php echo htmlspecialchars($path, ENT_QUOTES); ?>">
+            <input type="hidden" name="targetPath" value="${targetPath}">
             <input type="hidden" name="currentUrl" value="<?php echo htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES); ?>">
         `;
         document.body.appendChild(form);
@@ -299,6 +308,11 @@ if(isset($_GET["Pfad0"])){
             fileCard.setAttribute("draggable", "true");
             fileCard.addEventListener("dragstart", (event) => {
                 event.dataTransfer.setData("text/plain", fileCard.dataset.fileName);
+                document.getElementById("breadcrumb").classList.add("drag-active");
+            });
+            fileCard.addEventListener("dragend", () => {
+                document.getElementById("breadcrumb").classList.remove("drag-active");
+                document.querySelectorAll(".crumb-target").forEach(t => t.classList.remove("drag-over"));
             });
         });
         document.querySelectorAll(".folder-card[data-folder-name]").forEach(folderCard => {
@@ -312,7 +326,24 @@ if(isset($_GET["Pfad0"])){
                 folderCard.classList.remove("drag-over");
                 const fileName = event.dataTransfer.getData("text/plain");
                 const targetFolder = folderCard.dataset.folderName;
-                if (fileName && targetFolder) moveFileToFolder(fileName, targetFolder);
+                if (fileName && targetFolder) {
+                    const targetPath = "<?php echo htmlspecialchars($path, ENT_QUOTES); ?>" + "/" + targetFolder;
+                    moveFileToTargetPath(fileName, targetPath);
+                }
+            });
+        });
+        document.querySelectorAll(".crumb-target").forEach(target => {
+            target.addEventListener("dragover", (event) => {
+                event.preventDefault();
+                target.classList.add("drag-over");
+            });
+            target.addEventListener("dragleave", () => target.classList.remove("drag-over"));
+            target.addEventListener("drop", (event) => {
+                event.preventDefault();
+                target.classList.remove("drag-over");
+                const fileName = event.dataTransfer.getData("text/plain");
+                const targetPath = target.dataset.path;
+                if (fileName && targetPath) moveFileToTargetPath(fileName, targetPath);
             });
         });
     });

@@ -1,19 +1,33 @@
 <?php
-$path = $_POST['path'] ?? '';
+$sourcePathInput = $_POST['sourcePath'] ?? '';
 $fileName = $_POST['fileName'] ?? '';
-$targetFolder = $_POST['targetFolder'] ?? '';
+$targetPathInput = $_POST['targetPath'] ?? '';
 $currentUrl = $_POST['currentUrl'] ?? 'index.php';
 
-if ($path === '' || $fileName === '' || $targetFolder === '') {
+if ($sourcePathInput === '' || $fileName === '' || $targetPathInput === '') {
     header('LOCATION:' . $currentUrl);
     exit;
 }
 
-$source = $path . '/' . $fileName;
-$destinationDir = $path . '/' . $targetFolder;
-$destination = $destinationDir . '/' . $fileName;
+$rootPath = realpath('../mainStorage');
+$sourcePath = realpath($sourcePathInput);
+$targetPath = realpath($targetPathInput);
+$safeFileName = basename($fileName);
 
-if (is_file($source) && is_dir($destinationDir) && !file_exists($destination)) {
+$isInsideRoot = function ($candidatePath, $root) {
+    return $candidatePath !== false && $root !== false && strpos($candidatePath, $root) === 0;
+};
+
+$source = $sourcePath . '/' . $safeFileName;
+$destination = $targetPath . '/' . $safeFileName;
+
+if (
+    $isInsideRoot($sourcePath, $rootPath) &&
+    $isInsideRoot($targetPath, $rootPath) &&
+    is_file($source) &&
+    is_dir($targetPath) &&
+    !file_exists($destination)
+) {
     rename($source, $destination);
 }
 
