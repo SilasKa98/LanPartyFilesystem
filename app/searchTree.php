@@ -9,7 +9,10 @@ if ($query === '' || $rootPath === false) {
     exit;
 }
 
-$needle = mb_strtolower($query);
+$lower = function($value) {
+    return function_exists('mb_strtolower') ? mb_strtolower($value) : strtolower($value);
+};
+$needle = $lower($query);
 $results = [];
 
 $iterator = new RecursiveIteratorIterator(
@@ -24,7 +27,7 @@ foreach ($iterator as $item) {
         continue;
     }
 
-    if (mb_strpos(mb_strtolower($relativePath), $needle) !== false) {
+    if (strpos($lower($relativePath), $needle) !== false) {
         $results[] = [
             'name' => $item->getFilename(),
             'relativePath' => $relativePath,

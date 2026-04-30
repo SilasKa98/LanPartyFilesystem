@@ -117,25 +117,42 @@
         }
         function debounce(fn, wait) { let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args),wait); }; }
         const filterEntriesDebounced = debounce(filterEntries, 120);
+        let searchRequestId = 0;
         async function searchAllPaths(){
             const q = document.getElementById('searchInput').value.trim();
             const box = document.getElementById('searchResults');
             if(q.length < 2){ box.classList.remove('show'); box.innerHTML=''; return; }
-            const res = await fetch('searchTree.php?q=' + encodeURIComponent(q));
-            const data = await res.json();
-            renderSearchResults(data.results || []);
+            const requestId = ++searchRequestId;
+            try {
+                const res = await fetch('searchTree.php?q=' + encodeURIComponent(q), { headers: { 'Accept': 'application/json' } });
+                if (!res.ok) throw new Error('Search request failed');
+                const data = await res.json();
+                if (requestId !== searchRequestId) return;
+                renderSearchResults(Array.isArray(data.results) ? data.results : []);
+            } catch (error) {
+                box.innerHTML = '<div class="search-node">Suche aktuell nicht verfügbar</div>';
+                box.classList.add('show');
+            }
         }
         function renderSearchResults(results){
             const box = document.getElementById('searchResults');
             if(!results.length){ box.innerHTML = '<div class=\"search-node\">Keine Treffer</div>'; box.classList.add('show'); return; }
-            box.innerHTML = results.map(item => {
-                const depth = (item.relativePath.match(/\\//g) || []).length;
+            box.innerHTML = '';
+            results.forEach(item => {
+                const depth = (String(item.relativePath || '').match(/\//g) || []).length;
                 const icon = item.type === 'folder' ? '📁' : '📄';
                 const url = item.type === 'folder'
-                    ? 'index.php?' + item.relativePath.split('/').map((s, i) => 'Pfad'+i+'='+encodeURIComponent(s)).join('&')
+                    ? 'index.php?' + String(item.relativePath).split('/').map((s, i) => 'Pfad'+i+'='+encodeURIComponent(s)).join('&')
                     : '#';
-                return `<div class=\"search-node\" style=\"padding-left:${8 + depth*16}px\" data-url=\"${url}\" data-type=\"${item.type}\" data-path=\"${item.relativePath}\">${icon} ${item.relativePath}</div>`;
-            }).join('');
+                const node = document.createElement('div');
+                node.className = 'search-node';
+                node.style.paddingLeft = `${8 + depth * 16}px`;
+                node.dataset.url = url;
+                node.dataset.type = item.type;
+                node.dataset.path = item.relativePath;
+                node.textContent = `${icon} ${item.relativePath}`;
+                box.appendChild(node);
+            });
             box.classList.add('show');
         }
         function sortEntries(){
