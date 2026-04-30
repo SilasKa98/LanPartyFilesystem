@@ -112,7 +112,11 @@ if (roomRequiresPassword($roomsMeta, $room) && !roomPasswordValid($roomsMeta, $r
   exit;
 }
 
-if (!file_exists($file)) { touch($file); }
+if (!file_exists($file)) {
+  http_response_code(404);
+  echo json_encode(['ok' => false, 'error' => 'room_not_found']);
+  exit;
+}
 
 if ($action === 'send') {
   $raw = file_get_contents('php://input');

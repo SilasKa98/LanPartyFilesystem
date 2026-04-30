@@ -114,6 +114,15 @@ async function load(){
   if(!room){return;}
   const pw=roomPasswords[room]||'';
   const r=await fetch('chat_api.php?action=list&room='+encodeURIComponent(room)+'&password='+encodeURIComponent(pw));
+  if(!r.ok){
+    room='';
+    sessionStorage.removeItem('chat_room');
+    localStorage.removeItem('chat_room');
+    document.getElementById('roomLabel').textContent='Kein Raum ausgewählt';
+    box.innerHTML='<div class="muted">Dieser Chat wurde gelöscht oder ist nicht mehr verfügbar.</div>';
+    await loadRooms();
+    return;
+  }
   const d=await r.json();
   const messages=d.messages||[];
   box.innerHTML=messages.map(m=>`<div class="m"><div class="meta"><strong>${esc(m.user)}</strong> • ${fmt(m.ts)}</div><div>${esc(m.text)}</div></div>`).join('') || '<div class="muted">Noch keine Nachrichten.</div>';
