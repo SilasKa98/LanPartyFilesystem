@@ -13,7 +13,7 @@
     .module-links{margin-bottom:12px}
     .side-link{display:block;padding:10px 12px;border-radius:10px;color:#2e4468;text-decoration:none;font-weight:600;margin:4px 0}
     .side-link.active{background:#edf3ff;color:#1f6fff}
-    .muted{font-size:.88rem;color:#5f7193}
+    .muted{font-size:.88rem;color:#5f7193}.brand-subtitle{white-space:nowrap}
     .row{display:flex;gap:8px;flex-wrap:wrap}
     input,button{padding:11px 12px;border-radius:10px;border:1px solid #cfdfff}
     button{background:#1f6fff;color:#fff;border-color:#1f6fff;cursor:pointer}
@@ -43,7 +43,7 @@
 <body>
 <div class="wrap"><div class="app-shell">
     <aside class="panel sidebar">
-      <a class="sidebar-brand" href="index.php"><img src="../media/LocalLoot_logo.png" alt="LocalLoot Logo"><div><strong style="font-size:1.2rem">LocalLoot</strong><div class="muted">Local Tools for LAN-Parties</div></div></a>
+      <a class="sidebar-brand" href="index.php"><img src="../media/LocalLoot_logo.png" alt="LocalLoot Logo"><div><strong style="font-size:1.2rem">LocalLoot</strong><div class="muted brand-subtitle">Local Tools for LAN-Parties</div></div></a>
       <div class="module-links"><a class="side-link" href="file-browser.php">📁 Files</a><a class="side-link" href="#">🎮 Game Library</a><a class="side-link active" href="chat.php">💬 Chat</a><a class="side-link" href="#">🧰 Tools</a></div>
       <h3 style="margin:8px 0 8px">Chats</h3>
       <div class="row" style="align-items:center;justify-content:space-between;margin-bottom:8px"><p class="muted" style="margin:0">Hallo <strong id="userLabel">-</strong></p><button id="editNameBtn" type="button" class="secondary">Name ändern</button></div>
