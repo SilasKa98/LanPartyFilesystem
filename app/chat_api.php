@@ -83,7 +83,7 @@ if ($action === 'createRoom') {
 if ($action === 'deleteRoom') {
   $requester = trim($_GET['requester'] ?? '');
   $owner = trim($roomsMeta[$room]['owner'] ?? '');
-  if ($owner === '' || $requester !== $owner) {
+  if ($requester === '' || ($owner !== '' && $requester !== $owner)) {
     http_response_code(403);
     echo json_encode(['ok' => false, 'error' => 'forbidden']);
     exit;
