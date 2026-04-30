@@ -9,7 +9,7 @@
     *{box-sizing:border-box} body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:linear-gradient(180deg,#fff,var(--bg));color:var(--ink)}
     .wrap{max-width:1280px;margin:0 auto;padding:18px}
     .nav{display:flex;justify-content:space-between;align-items:center;padding:10px 0 18px;border-bottom:1px solid var(--border)}
-    .brand{display:flex;gap:12px;align-items:center}.logo{width:48px;height:48px;border-radius:10px;background:#e8f0ff;display:grid;place-items:center;font-size:26px}
+    .brand{display:flex;gap:12px;align-items:center}.logo{width:48px;height:48px;border-radius:10px;background:#e8f0ff;display:grid;place-items:center;object-fit:contain;padding:4px}
     .brand h1{margin:0;font-size:2.1rem}.brand p{margin:0;color:var(--muted)}
     .menu{display:flex;gap:20px;color:#1e2e4d;font-weight:600}
     .hero{margin-top:22px;background:#fff;border:1px solid var(--border);border-radius:20px;display:grid;grid-template-columns:1.1fr .9fr;gap:22px;padding:34px;box-shadow:0 12px 40px rgba(31,111,255,.08)}
@@ -29,7 +29,7 @@
 <body>
   <div class="wrap">
     <header class="nav">
-      <div class="brand"><div class="logo">🗂️</div><div><h1>LocalLoot</h1><p>Local file & game sharing for LAN parties</p></div></div>
+      <div class="brand"><img class="logo" src="../media/LocalLoot_logo.png" alt="LocalLoot Logo"><div><h1>LocalLoot</h1><p>Local file & game sharing for LAN parties</p></div></div>
       <nav class="menu"><span>Features</span><span>Modules</span><span>How It Works</span><span>FAQ</span><span>Docs</span></nav>
     </header>
 
@@ -48,7 +48,7 @@
     <section class="modules">
       <a class="module" href="file-browser.php"><h3>📁 Files</h3><p>Dateien durchsuchen, öffnen und verwalten.</p></a>
       <a class="module" href="#"><h3>🎮 Game Library</h3><p>Spielekatalog für LAN-Sessions (in Planung).</p></a>
-      <a class="module" href="#"><h3>💬 Chat</h3><p>Team-Kommunikation und schnelle Abstimmung (in Planung).</p></a>
+      <a class="module" href="chat.php"><h3>💬 Chat</h3><p>Team-Kommunikation im gemeinsamen Chat-Raum.</p></a>
       <a class="module" href="#"><h3>🖥️ Server Status <small style="color:#1f6fff;">TBA</small></h3><p>Server-Metriken und Health-Checks folgen bald.</p></a>
     </section>
   </div>
