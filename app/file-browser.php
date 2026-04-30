@@ -391,6 +391,17 @@ if(isset($_GET["Pfad0"])){
             });
         });
         document.querySelectorAll(".folder-card[data-folder-name]").forEach(folderCard => {
+            folderCard.setAttribute("draggable", "true");
+            folderCard.addEventListener("dragstart", (event) => {
+                event.stopPropagation();
+                event.dataTransfer.setData("text/plain", folderCard.dataset.folderName);
+                document.getElementById("breadcrumb").classList.add("drag-active");
+            });
+            folderCard.addEventListener("dragend", () => {
+                document.getElementById("breadcrumb").classList.remove("drag-active");
+                document.querySelectorAll(".crumb-target").forEach(t => t.classList.remove("drag-over"));
+                folderCard.classList.remove("drag-over");
+            });
             folderCard.addEventListener("dragover", (event) => {
                 event.preventDefault();
                 folderCard.classList.add("drag-over");
@@ -401,7 +412,7 @@ if(isset($_GET["Pfad0"])){
                 folderCard.classList.remove("drag-over");
                 const fileName = event.dataTransfer.getData("text/plain");
                 const targetFolder = folderCard.dataset.folderName;
-                if (fileName && targetFolder) {
+                if (fileName && targetFolder && fileName !== targetFolder) {
                     const targetPath = "<?php echo htmlspecialchars($path, ENT_QUOTES); ?>" + "/" + targetFolder;
                     moveFileToTargetPath(fileName, targetPath);
                 }

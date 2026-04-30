@@ -24,9 +24,10 @@ $destination = $targetPath . '/' . $safeFileName;
 if (
     $isInsideRoot($sourcePath, $rootPath) &&
     $isInsideRoot($targetPath, $rootPath) &&
-    is_file($source) &&
+    (is_file($source) || is_dir($source)) &&
     is_dir($targetPath) &&
-    !file_exists($destination)
+    !file_exists($destination) &&
+    !((is_dir($source)) && strpos($destination . DIRECTORY_SEPARATOR, $source . DIRECTORY_SEPARATOR) === 0)
 ) {
     rename($source, $destination);
 }
