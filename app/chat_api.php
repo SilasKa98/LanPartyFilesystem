@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
-$baseDir = '../mainStorage/chat';
+$baseDir = __DIR__ . '/chatStorage';
 if (!is_dir($baseDir)) { mkdir($baseDir, 0777, true); }
 
 function safeRoomName(string $room): string {
