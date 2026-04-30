@@ -7,10 +7,7 @@
     body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:#f4f8ff;color:#0b1b3a}
     .wrap{width:100%;padding:0}.app-shell{display:grid;grid-template-columns:300px 1fr;min-height:100vh}.chat-main{padding:18px}
     .layout{display:block}
-    .panel{background:#fff;border:1px solid #dbe7ff;border-radius:14px;padding:12px}.sidebar{border-right:1px solid #e2e9f7;border-radius:0;border-left:0;border-top:0;border-bottom:0;min-height:100vh}
-    .sidebar-brand{display:flex;gap:10px;align-items:center;text-decoration:none;color:inherit;margin-bottom:14px}
-    .sidebar-brand img{width:44px;height:44px;border-radius:10px;background:#e8f0ff;padding:5px;object-fit:contain}
-    .module-links{margin-bottom:12px}
+    .panel{background:#fff;border:1px solid #dbe7ff;border-radius:14px;padding:12px}.sidebar{background:#fff;border-right:1px solid #e2e9f7;padding:22px}.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}.brand-logo{width:44px;height:44px;border-radius:10px;background:#e8f0ff;padding:5px;object-fit:contain}
     .side-link{display:block;padding:10px 12px;border-radius:10px;color:#2e4468;text-decoration:none;font-weight:600;margin:4px 0}
     .side-link.active{background:#edf3ff;color:#1f6fff}
     .muted{font-size:.88rem;color:#5f7193}.brand-subtitle{white-space:nowrap}
@@ -41,15 +38,14 @@
   </style>
 </head>
 <body>
+<?php require_once __DIR__ . '/components/sidebar.php'; ?>
 <div class="wrap"><div class="app-shell">
-    <aside class="panel sidebar">
-      <a class="sidebar-brand" href="index.php"><img src="../media/LocalLoot_logo.png" alt="LocalLoot Logo"><div><strong style="font-size:1.2rem">LocalLoot</strong><div class="muted brand-subtitle">Local Tools for LAN-Parties</div></div></a>
-      <div class="module-links"><a class="side-link" href="file-browser.php">📁 Files</a><a class="side-link" href="#">🎮 Game Library</a><a class="side-link active" href="chat.php">💬 Chat</a><a class="side-link" href="#">🧰 Tools</a></div>
-      <h3 style="margin:8px 0 8px">Chats</h3>
-      <div class="row" style="align-items:center;justify-content:space-between;margin-bottom:8px"><p class="muted" style="margin:0">Hallo <strong id="userLabel">-</strong></p><button id="editNameBtn" type="button" class="secondary">Name ändern</button></div>
-      <div class="new-room-wrap"><div class="row"><input id="newRoomInput" maxlength="60" placeholder="Neuen Chat-Namen" style="flex:1"><button id="createRoomBtn" type="button">Starten</button></div><div class="row"><label class="muted" style="display:flex;align-items:center;gap:8px"><span>Passwortschutz</span><span class="switch"><input id="protectToggle" type="checkbox"><span class="slider"></span></span></label></div><div class="password-wrap" id="passwordWrap"><input id="newRoomPassword" type="password" maxlength="64" placeholder="Chat-Passwort" style="max-width:220px"></div></div>
-      <div id="rooms" class="rooms"></div>
-    </aside>
+    <?php ob_start(); ?>
+<h3 style="margin:8px 0 8px">Chats</h3>
+<div class="row" style="align-items:center;justify-content:space-between;margin-bottom:8px"><p class="muted" style="margin:0">Hallo <strong id="userLabel">-</strong></p><button id="editNameBtn" type="button" class="secondary">Name ändern</button></div>
+<div class="new-room-wrap"><div class="row"><input id="newRoomInput" maxlength="60" placeholder="Neuen Chat-Namen" style="flex:1"><button id="createRoomBtn" type="button">Starten</button></div><div class="row"><label class="muted" style="display:flex;align-items:center;gap:8px"><span>Passwortschutz</span><span class="switch"><input id="protectToggle" type="checkbox"><span class="slider"></span></span></label></div><div class="password-wrap" id="passwordWrap"><input id="newRoomPassword" type="password" maxlength="64" placeholder="Chat-Passwort" style="max-width:220px"></div></div>
+<div id="rooms" class="rooms"></div>
+<?php $chatTools = ob_get_clean(); renderSidebar('chat', $chatTools); ?>
 
     <main class="chat-main"><section class="panel">
       <div class="muted" id="roomLabel" style="margin-bottom:6px">Kein Raum ausgewählt</div>

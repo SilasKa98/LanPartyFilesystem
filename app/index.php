@@ -6,7 +6,7 @@
   <title>LocalLoot Dashboard</title>
   <style>
     :root{--blue:#1f6fff;--ink:#0b1b3a;--muted:#5f7193;--bg:#f4f8ff;--card:#fff;--border:#dbe7ff}
-    *{box-sizing:border-box} body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:linear-gradient(180deg,#fff,var(--bg));color:var(--ink)}
+    *{box-sizing:border-box} .app-shell{display:grid;grid-template-columns:300px 1fr;min-height:100vh}.sidebar{background:#fff;border-right:1px solid #e2e9f7;padding:22px}.side-link{display:block;padding:12px 14px;border-radius:10px;color:#2e4468;text-decoration:none;font-weight:600;margin:4px 0}.side-link.active{background:#edf3ff;color:#1f6fff}.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}.brand-logo{width:44px;height:44px;border-radius:10px;background:#e8f0ff;padding:5px;object-fit:contain}.brand-subtitle{white-space:nowrap} body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:linear-gradient(180deg,#fff,var(--bg));color:var(--ink)}
     .wrap{max-width:1280px;margin:0 auto;padding:18px}
     .nav{display:flex;justify-content:space-between;align-items:center;padding:10px 0 18px;border-bottom:1px solid var(--border)}
     .brand{display:flex;gap:12px;align-items:center}.logo{width:48px;height:48px;border-radius:10px;background:#e8f0ff;display:grid;place-items:center;object-fit:contain;padding:4px}
@@ -27,7 +27,8 @@
   </style>
 </head>
 <body>
-  <div class="wrap">
+<?php require_once __DIR__ . '/components/sidebar.php'; ?>
+  <div class="app-shell"><?php renderSidebar('files'); ?><main><div class="wrap">
     <header class="nav">
       <div class="brand"><img class="logo" src="../media/LocalLoot_logo.png" alt="LocalLoot Logo"><div><h1>LocalLoot</h1><p>Local file & game sharing for LAN parties</p></div></div>
       <nav class="menu"><span>Features</span><span>Modules</span><span>How It Works</span><span>FAQ</span><span>Docs</span></nav>
@@ -51,7 +52,7 @@
       <a class="module" href="chat.php"><h3>💬 Chat</h3><p>Team-Kommunikation im gemeinsamen Chat-Raum.</p></a>
       <a class="module" href="tools.php"><h3>🧰 Tools</h3><p>Nützliche Zusatzfunktionen für eure LAN-Session.</p></a>
     </section>
-  </div>
+  </div></main></div>
 <script src="chat_notifier.js"></script>
 </body>
 </html>
