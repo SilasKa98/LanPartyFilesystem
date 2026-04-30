@@ -41,15 +41,21 @@ const colors=['#1f6fff','#14b8a6','#7c3aed','#ef4444','#f59e0b','#0ea5e9','#db27
 function parsePlayers(text){
   return text.split(/\n+/).map(l=>l.trim()).filter(Boolean).map(line=>{const m=line.match(/^(.*?)\s*(?:\((\d+)\))?$/);const name=(m?.[1]||line).trim();const skill=Math.max(1,Math.min(10,parseInt(m?.[2]||'5',10)));return {name,skill};});
 }
+function shuffle(arr){
+  const out=[...arr];
+  for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[out[i],out[j]]=[out[j],out[i]];}
+  return out;
+}
 function balanceTeams(players, teamSize){
   const teamCount=Math.ceil(players.length/teamSize);
-  const teams=Array.from({length:teamCount},()=>({members:[],skill:0}));
-  const sorted=[...players].sort((a,b)=>b.skill-a.skill);
+  const teams=Array.from({length:teamCount},(_,i)=>({id:i,members:[],skill:0}));
+  const randomized=shuffle(players);
+  const sorted=[...randomized].sort((a,b)=>b.skill-a.skill);
   for(const p of sorted){
-    teams.sort((a,b)=>a.members.length-b.members.length || a.skill-b.skill);
+    teams.sort((a,b)=> (a.members.length-b.members.length) || (a.skill-b.skill) || (Math.random()-0.5));
     teams[0].members.push(p);teams[0].skill+=p.skill;
   }
-  return teams;
+  return shuffle(teams);
 }
 function renderBalls(players){
   arena.innerHTML='';
