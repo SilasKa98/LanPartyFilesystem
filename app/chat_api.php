@@ -42,7 +42,7 @@ if ($action === 'listRooms') {
   foreach (glob($baseDir . '/*.jsonl') ?: [] as $path) {
     $name = basename($path, '.jsonl');
     if ($name !== '') {
-      $rooms[] = ['name' => $name, 'protected' => roomRequiresPassword($roomsMeta, $name)];
+      $rooms[] = ['name' => $name, 'protected' => roomRequiresPassword($roomsMeta, $name), 'owner' => ($roomsMeta[$name]['owner'] ?? '')];
     }
   }
   usort($rooms, fn($a, $b) => strcmp($a['name'], $b['name']));
@@ -65,14 +65,33 @@ if ($action === 'createRoom') {
     exit;
   }
 
+  $creator = trim($_GET['creator'] ?? '');
   if ($protect) {
-    $roomsMeta[$room] = ['password_hash' => password_hash($password, PASSWORD_DEFAULT)];
+    $roomsMeta[$room] = ['password_hash' => password_hash($password, PASSWORD_DEFAULT), 'owner' => $creator];
   } elseif (!isset($roomsMeta[$room])) {
-    $roomsMeta[$room] = ['password_hash' => ''];
+    $roomsMeta[$room] = ['password_hash' => '', 'owner' => $creator];
+  } elseif ($creator !== '' && empty($roomsMeta[$room]['owner'])) {
+    $roomsMeta[$room]['owner'] = $creator;
   }
   saveRoomsMeta($roomsMetaFile, $roomsMeta);
   if (!file_exists($file)) { touch($file); }
   echo json_encode(['ok' => true, 'room' => $room, 'protected' => $protect]);
+  exit;
+}
+
+
+if ($action === 'deleteRoom') {
+  $requester = trim($_GET['requester'] ?? '');
+  $owner = trim($roomsMeta[$room]['owner'] ?? '');
+  if ($owner === '' || $requester !== $owner) {
+    http_response_code(403);
+    echo json_encode(['ok' => false, 'error' => 'forbidden']);
+    exit;
+  }
+  if (file_exists($file)) { unlink($file); }
+  unset($roomsMeta[$room]);
+  saveRoomsMeta($roomsMetaFile, $roomsMeta);
+  echo json_encode(['ok' => true]);
   exit;
 }
 

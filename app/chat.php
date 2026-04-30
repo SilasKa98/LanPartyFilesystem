@@ -19,7 +19,7 @@
     button{background:#1f6fff;color:#fff;border-color:#1f6fff;cursor:pointer}
     button.secondary{background:#fff;color:#1f6fff}
     .rooms{margin-top:12px;display:flex;flex-direction:column;gap:8px;max-height:46vh;overflow:auto}
-    .roomBtn{width:100%;text-align:left;background:#f8fbff;color:#0b1b3a;border:1px solid #dbe7ff}
+    .roomItem{display:flex;gap:6px}.roomBtn{flex:1;text-align:left;background:#f8fbff;color:#0b1b3a;border:1px solid #dbe7ff}.deleteRoomBtn{background:#fff;color:#d22;border:1px solid #f0b3b3;padding:8px 10px;border-radius:10px}
     .roomBtn.active{border-color:#1f6fff;background:#eaf2ff}
     .new-room-wrap{display:grid;gap:8px}
     .password-wrap{display:none;width:100%}
@@ -47,7 +47,7 @@
       <div class="module-links"><a class="side-link" href="file-browser.php">📁 Files</a><a class="side-link" href="#">🎮 Game Library</a><a class="side-link active" href="chat.php">💬 Chat</a><a class="side-link" href="#">🖥️ Server Status</a></div>
       <h3 style="margin:8px 0 8px">Chats</h3>
       <div class="row" style="align-items:center;justify-content:space-between;margin-bottom:8px"><p class="muted" style="margin:0">Hallo <strong id="userLabel">-</strong></p><button id="editNameBtn" type="button" class="secondary">Name ändern</button></div>
-      <div class="new-room-wrap"><div class="row"><input id="newRoomInput" maxlength="60" placeholder="Neuen Chat-Namen" style="flex:1"><button id="createRoomBtn" type="button">Starten</button></div><div class="row"><label class="muted" style="display:flex;align-items:center;gap:8px"><span>Passwortschutz</span><span class="switch"><input id="protectToggle" type="checkbox"><span class="slider"></span></span></label></div><div class="password-wrap" id="passwordWrap"><input id="newRoomPassword" type="password" maxlength="120" placeholder="Passwort für neuen Chat"></div></div>
+      <div class="new-room-wrap"><div class="row"><input id="newRoomInput" maxlength="60" placeholder="Neuen Chat-Namen" style="flex:1"><button id="createRoomBtn" type="button">Starten</button></div><div class="row"><label class="muted" style="display:flex;align-items:center;gap:8px"><span>Passwortschutz</span><span class="switch"><input id="protectToggle" type="checkbox"><span class="slider"></span></span></label></div><div class="password-wrap" id="passwordWrap"><input id="newRoomPassword" type="password" maxlength="64" placeholder="Chat-Passwort" style="max-width:220px"></div></div>
       <div id="rooms" class="rooms"></div>
     </aside>
 
@@ -98,7 +98,7 @@ async function loadRooms(){
   const rooms=d.rooms||[];
   roomsEl.innerHTML='';
   if(!rooms.length){roomsEl.innerHTML='<div class="muted">Noch keine Chats vorhanden.</div>';return;}
-  rooms.forEach(item=>{const name=item.name||'';const isProtected=!!item.protected;const b=document.createElement('button');b.type='button';b.className='roomBtn'+(name===room?' active':'');b.textContent=(isProtected?'🔒 ':'')+name;b.onclick=()=>openChat(name,isProtected);roomsEl.appendChild(b);});
+  rooms.forEach(item=>{const name=item.name||'';const isProtected=!!item.protected;const owner=item.owner||'';const wrap=document.createElement('div');wrap.className='roomItem';const b=document.createElement('button');b.type='button';b.className='roomBtn'+(name===room?' active':'');b.textContent=(isProtected?'🔒 ':'')+name;b.onclick=()=>openChat(name,isProtected);wrap.appendChild(b);if(username&&owner===username){const del=document.createElement('button');del.type='button';del.className='deleteRoomBtn';del.textContent='🗑';del.title='Chat löschen';del.onclick=()=>deleteRoom(name);wrap.appendChild(del);}roomsEl.appendChild(wrap);});
 }
 
 async function fetchLatestTs(roomName){
@@ -187,12 +187,21 @@ document.getElementById('editNameBtn').onclick=()=>{
   document.getElementById('nameGate').style.display='grid';
 };
 
+
+async function deleteRoom(roomName){
+  if(!confirm('Diesen Chat wirklich löschen?')){return;}
+  const res=await fetch('chat_api.php?action=deleteRoom&room='+encodeURIComponent(roomName)+'&requester='+encodeURIComponent(username));
+  if(!res.ok){alert('Löschen nicht erlaubt. Nur der Ersteller darf löschen.');return;}
+  if(room===roomName){room='';document.getElementById('roomLabel').textContent='Kein Raum ausgewählt';box.innerHTML='<div class="muted">Bitte links einen Chat auswählen oder erstellen.</div>';}
+  await loadRooms();
+}
+
 document.getElementById('createRoomBtn').onclick=async()=>{
   const rname=document.getElementById('newRoomInput').value.trim();
   if(!rname||!username){return;}
   const protect=document.getElementById('protectToggle').checked;
   const newPw=document.getElementById('newRoomPassword').value.trim();
-  await fetch('chat_api.php?action=createRoom&room='+encodeURIComponent(rname)+'&protect='+(protect?'1':'0')+'&newPassword='+encodeURIComponent(newPw));
+  await fetch('chat_api.php?action=createRoom&room='+encodeURIComponent(rname)+'&protect='+(protect?'1':'0')+'&newPassword='+encodeURIComponent(newPw)+'&creator='+encodeURIComponent(username));
   document.getElementById('newRoomInput').value='';
   await loadRooms();
   openChat(rname);
