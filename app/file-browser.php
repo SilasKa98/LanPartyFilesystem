@@ -198,6 +198,10 @@
         document.getElementById("detailName").textContent = "Aktuelles Verzeichnis";
         document.getElementById("detailSubtitle").textContent = document.getElementById("currentPathText").innerText;
         document.getElementById("detailDownload").setAttribute("href", "#");
+        document.getElementById("rowFolders").style.display = "flex";
+        document.getElementById("rowFiles").style.display = "flex";
+        document.getElementById("rowType").style.display = "none";
+        document.getElementById("rowSize").style.display = "none";
     }
     document.getElementById("detailCopy").addEventListener("click", function(){ navigator.clipboard.writeText(document.getElementById("detailPath").textContent); showToast("Link/Pfad kopiert"); });
 
@@ -273,7 +277,11 @@ if(isset($_GET["Pfad0"])){
             elseif(stripos($entry, ".zip") !== false){ $media = "../media/folder.svg"; }
             else{ $media = "../media/file.svg"; }
 
-            echo "<div class='card' tabindex='0' role='button' aria-label='Datei ".$entry."' data-file-name=\"".htmlspecialchars($entry, ENT_QUOTES)."\" data-name='".$entry."' oncontextmenu='openDropdown(this)' onclick='previewFile(\"".$entry."\", \"".$media."\", \"".$path."/".$entry."\")'><img loading='lazy' src='".$media."' alt='File icon'>";
+            $fileType = strtoupper(pathinfo($entry, PATHINFO_EXTENSION));
+            if($fileType === ''){ $fileType = 'DATEI'; }
+            $fileSizeBytes = @filesize($path.'/'.$entry);
+            $fileSizeLabel = $fileSizeBytes !== false ? round($fileSizeBytes / 1024 / 1024, 2).' MB' : 'Unbekannt';
+            echo "<div class='card' tabindex='0' role='button' aria-label='Datei ".$entry."' data-file-name=\"".htmlspecialchars($entry, ENT_QUOTES)."\" data-name='".$entry."' data-file-type='".htmlspecialchars($fileType, ENT_QUOTES)."' data-file-size='".htmlspecialchars($fileSizeLabel, ENT_QUOTES)."' oncontextmenu='openDropdown(this)' onclick='previewFile(\"".$entry."\", \"".$media."\", \"".$path."/".$entry."\", \"".$fileType."\", \"".$fileSizeLabel."\")'><img loading='lazy' src='".$media."' alt='File icon'>";
             echo '<div class="dropdown-content">';
             echo '<a href="'.$path.'/'.$entry.'" download>Download</a>';
             echo '<form action="deleteFile.php" method="post" style="margin:0;">';
@@ -283,7 +291,7 @@ if(isset($_GET["Pfad0"])){
     }
     print "</div>";
     ?>
-</div></main><aside class="rightpanel"><div class="detail-card"><div style="font-size:.85rem;color:#7e8eaa;margin-bottom:8px;">DETAILS</div><h3 id="detailName" style="margin:0 0 8px;">Aktuelles Verzeichnis</h3><p id="detailSubtitle" style="margin:0 0 12px;color:#6c7d98;"><?php echo htmlspecialchars($currentDisplayPath, ENT_QUOTES); ?></p><div class="meta-row"><span>Ordner</span><strong id="detailFolders"><?php echo $folderCount; ?></strong></div><div class="meta-row"><span>Dateien</span><strong id="detailFiles"><?php echo $fileCount; ?></strong></div><div class="meta-row"><span>Pfad</span><span id="detailPath"><?php echo htmlspecialchars($path, ENT_QUOTES); ?></span></div><div class="quick-actions"><a id="detailDownload" class="btn primary" href="#">Download</a><button class="btn" type="button" id="detailCopy">Copy Link</button><button class="btn" type="button">Add to Favorites</button></div></div></aside></div>
+</div></main><aside class="rightpanel"><div class="detail-card"><div style="font-size:.85rem;color:#7e8eaa;margin-bottom:8px;">DETAILS</div><h3 id="detailName" style="margin:0 0 8px;">Aktuelles Verzeichnis</h3><p id="detailSubtitle" style="margin:0 0 12px;color:#6c7d98;"><?php echo htmlspecialchars($currentDisplayPath, ENT_QUOTES); ?></p><div class="meta-row" id="rowFolders"><span>Ordner</span><strong id="detailFolders"><?php echo $folderCount; ?></strong></div><div class="meta-row" id="rowFiles"><span>Dateien</span><strong id="detailFiles"><?php echo $fileCount; ?></strong></div><div class="meta-row" id="rowType" style="display:none;"><span>Dateityp</span><strong id="detailType">-</strong></div><div class="meta-row" id="rowSize" style="display:none;"><span>Dateigröße</span><strong id="detailSize">-</strong></div><div class="meta-row"><span>Pfad</span><span id="detailPath"><?php echo htmlspecialchars($path, ENT_QUOTES); ?></span></div><div class="quick-actions"><a id="detailDownload" class="btn primary" href="#">Download</a><button class="btn" type="button" id="detailCopy">Copy Link</button><button class="btn" type="button">Add to Favorites</button></div></div></aside></div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <script>
     var modal = document.getElementById("myModal");
@@ -312,11 +320,17 @@ if(isset($_GET["Pfad0"])){
             window.location.href = el.dataset.href;
         }
     }
-    function previewFile(fileName, filePath, downloadPath){
+    function previewFile(fileName, filePath, downloadPath, fileType = "Datei", fileSize = "Unbekannt") {
         document.getElementById("detailName").textContent = fileName;
         document.getElementById("detailSubtitle").textContent = "Datei ausgewählt";
         document.getElementById("detailDownload").setAttribute("href", downloadPath);
         document.getElementById("detailPath").textContent = downloadPath;
+        document.getElementById("detailType").textContent = fileType;
+        document.getElementById("detailSize").textContent = fileSize;
+        document.getElementById("rowFolders").style.display = "none";
+        document.getElementById("rowFiles").style.display = "none";
+        document.getElementById("rowType").style.display = "flex";
+        document.getElementById("rowSize").style.display = "flex";
     }
     function moveFileToTargetPath(fileName, targetPath){
         if(!fileName || !targetPath) return;
@@ -356,6 +370,9 @@ if(isset($_GET["Pfad0"])){
             btn.innerText="◫ Grid View";
         }
         document.querySelectorAll(".card[data-file-name]").forEach(fileCard => {
+            fileCard.addEventListener("click", () => {
+                previewFile(fileCard.dataset.fileName, fileCard.querySelector("img").getAttribute("src"), "<?php echo htmlspecialchars($path, ENT_QUOTES); ?>/" + fileCard.dataset.fileName, fileCard.dataset.fileType || "Datei", fileCard.dataset.fileSize || "Unbekannt");
+            });
             fileCard.setAttribute("draggable", "true");
             fileCard.addEventListener("dragstart", (event) => {
                 event.dataTransfer.setData("text/plain", fileCard.dataset.fileName);
@@ -408,6 +425,10 @@ if(isset($_GET["Pfad0"])){
         document.getElementById("detailName").textContent = "Aktuelles Verzeichnis";
         document.getElementById("detailSubtitle").textContent = document.getElementById("currentPathText").innerText;
         document.getElementById("detailDownload").setAttribute("href", "#");
+        document.getElementById("rowFolders").style.display = "flex";
+        document.getElementById("rowFiles").style.display = "flex";
+        document.getElementById("rowType").style.display = "none";
+        document.getElementById("rowSize").style.display = "none";
     }
     document.getElementById("detailCopy").addEventListener("click", function(){ navigator.clipboard.writeText(document.getElementById("detailPath").textContent); showToast("Link/Pfad kopiert"); });
 
