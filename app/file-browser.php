@@ -323,7 +323,10 @@ if(isset($_GET["Pfad0"])){
     function previewFile(fileName, filePath, downloadPath, fileType = "Datei", fileSize = "Unbekannt") {
         document.getElementById("detailName").textContent = fileName;
         document.getElementById("detailSubtitle").textContent = "Datei ausgewählt";
-        document.getElementById("detailDownload").setAttribute("href", downloadPath);
+        const detailDownload = document.getElementById("detailDownload");
+        detailDownload.setAttribute("href", downloadPath);
+        detailDownload.setAttribute("download", fileName);
+        detailDownload.textContent = "Download";
         document.getElementById("detailPath").textContent = downloadPath;
         document.getElementById("detailType").textContent = fileType;
         document.getElementById("detailSize").textContent = fileSize;
@@ -424,7 +427,10 @@ if(isset($_GET["Pfad0"])){
     function updateDetailsPanelForDirectory(){
         document.getElementById("detailName").textContent = "Aktuelles Verzeichnis";
         document.getElementById("detailSubtitle").textContent = document.getElementById("currentPathText").innerText;
-        document.getElementById("detailDownload").setAttribute("href", "#");
+        const detailDownload = document.getElementById("detailDownload");
+        detailDownload.textContent = "Download ZIP";
+        detailDownload.removeAttribute("download");
+        detailDownload.setAttribute("href", "downloadFolder.php?path=<?php echo urlencode(dirname(rtrim($path, '/'))); ?>&folder=<?php echo urlencode(basename(rtrim($path, '/'))); ?>");
         document.getElementById("rowFolders").style.display = "flex";
         document.getElementById("rowFiles").style.display = "flex";
         document.getElementById("rowType").style.display = "none";
