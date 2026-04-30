@@ -1,3 +1,81 @@
 <?php require_once __DIR__ . '/components/sidebar.php'; ?>
-<!doctype html><html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Tools</title>
-<style>body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:#f5f8ff}.app-shell{display:grid;grid-template-columns:300px 1fr;min-height:100vh}.sidebar{background:#fff;border-right:1px solid #e2e9f7;padding:22px}.side-link{display:block;padding:12px 14px;border-radius:10px;color:#2e4468;text-decoration:none;font-weight:600;margin:4px 0}.side-link.active{background:#edf3ff;color:#1f6fff}.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}.brand-logo{width:44px;height:44px;border-radius:10px;background:#e8f0ff;padding:5px;object-fit:contain}.wrap{padding:24px}.card{background:#fff;border:1px solid #dce7ff;border-radius:14px;padding:18px}</style></head><body><div class="app-shell"><?php renderSidebar('tools'); ?><main class="wrap"><h1>🧰 Tools</h1><div class="card">Weitere Tools folgen hier.</div></main></div></body></html>
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>LocalLoot - Tools</title>
+<style>
+body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:#f5f8ff;color:#102446}
+.app-shell{display:grid;grid-template-columns:300px 1fr;min-height:100vh}.sidebar{background:#fff;border-right:1px solid #e2e9f7;padding:22px}.side-link{display:block;padding:12px 14px;border-radius:10px;color:#2e4468;text-decoration:none;font-weight:600;margin:4px 0}.side-link.active{background:#edf3ff;color:#1f6fff}.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}.brand-logo{width:44px;height:44px;border-radius:10px;background:#e8f0ff;padding:5px;object-fit:contain}
+.wrap{padding:24px;max-width:1200px}.panel{background:#fff;border:1px solid #dbe7ff;border-radius:16px;padding:18px;box-shadow:0 10px 30px rgba(20,60,130,.08)}
+.row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}.input,.btn,textarea{border:1px solid #d4e3ff;border-radius:12px;padding:11px 12px;font:inherit}
+textarea{width:100%;min-height:120px;resize:vertical}.btn{background:#1f6fff;color:#fff;border-color:#1f6fff;cursor:pointer;font-weight:700}.btn.ghost{background:#fff;color:#1f6fff}
+#arena{margin-top:16px;min-height:240px;position:relative;overflow:hidden;border:1px dashed #c9dcff;border-radius:14px;background:linear-gradient(180deg,#f7fbff,#eff6ff)}
+.ball{position:absolute;padding:7px 10px;border-radius:999px;background:#1f6fff;color:#fff;font-weight:700;font-size:.88rem;box-shadow:0 8px 20px rgba(31,111,255,.3);transition:transform .7s ease,left .7s ease,top .7s ease,background .7s ease}
+.team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px}
+.team{background:#fff;border:1px solid #dbe7ff;border-radius:14px;padding:12px}.team h3{margin:0 0 8px}.meta{color:#58709a;font-size:.9rem}
+</style>
+</head>
+<body>
+<div class="app-shell">
+<?php renderSidebar('tools'); ?>
+<main class="wrap">
+  <h1>🧰 Tools</h1>
+  <div class="panel">
+    <h2 style="margin-top:0">🎲 Team Randomizer (Skill-balanced)</h2>
+    <p class="meta">Namen je Zeile eingeben mit optionalem Skill in Klammern, z. B. <code>Alex (7)</code>. Ohne Angabe wird Skill 5 genutzt.</p>
+    <div class="row">
+      <input id="teamSize" class="input" type="number" min="2" value="3" style="width:160px" placeholder="Teamgröße">
+      <button class="btn" id="drawBtn">Teams auslosen</button>
+      <button class="btn ghost" id="demoBtn">Demo-Daten</button>
+    </div>
+    <textarea id="players" placeholder="Namen, je Zeile&#10;Mia (8)&#10;Noah (6)&#10;...\n"></textarea>
+    <div id="arena"></div>
+    <div id="result" class="team-grid"></div>
+  </div>
+</main>
+</div>
+<script>
+const arena=document.getElementById('arena');
+const result=document.getElementById('result');
+const colors=['#1f6fff','#14b8a6','#7c3aed','#ef4444','#f59e0b','#0ea5e9','#db2777'];
+function parsePlayers(text){
+  return text.split(/\n+/).map(l=>l.trim()).filter(Boolean).map(line=>{const m=line.match(/^(.*?)\s*(?:\((\d+)\))?$/);const name=(m?.[1]||line).trim();const skill=Math.max(1,Math.min(10,parseInt(m?.[2]||'5',10)));return {name,skill};});
+}
+function balanceTeams(players, teamSize){
+  const teamCount=Math.ceil(players.length/teamSize);
+  const teams=Array.from({length:teamCount},()=>({members:[],skill:0}));
+  const sorted=[...players].sort((a,b)=>b.skill-a.skill);
+  for(const p of sorted){
+    teams.sort((a,b)=>a.members.length-b.members.length || a.skill-b.skill);
+    teams[0].members.push(p);teams[0].skill+=p.skill;
+  }
+  return teams;
+}
+function renderBalls(players){
+  arena.innerHTML='';
+  const w=arena.clientWidth-90,h=arena.clientHeight-40;
+  players.forEach((p,i)=>{const d=document.createElement('div');d.className='ball';d.textContent=`${p.name} (${p.skill})`;d.style.left=Math.max(0,Math.random()*w)+'px';d.style.top=Math.max(0,Math.random()*h)+'px';d.style.transform='scale(0.9)';arena.appendChild(d);setTimeout(()=>{d.style.transform='scale(1)'},30*i);});
+}
+function animateToTeams(teams){
+  const balls=[...arena.querySelectorAll('.ball')];
+  const colW=Math.max(180,arena.clientWidth/teams.length);
+  let idx=0;
+  teams.forEach((team,ti)=>{team.members.forEach((m,mi)=>{const b=balls[idx++]; if(!b) return; b.style.background=colors[ti%colors.length]; b.style.left=(ti*colW+12)+'px'; b.style.top=(18+mi*38)+'px';});});
+}
+function renderResult(teams){
+  result.innerHTML='';
+  teams.forEach((team,i)=>{const el=document.createElement('div');el.className='team';el.innerHTML=`<h3 style="color:${colors[i%colors.length]}">Team ${i+1}</h3><div class="meta">Gesamt-Skill: <strong>${team.skill}</strong></div><ul>${team.members.map(m=>`<li>${m.name} <small>(Skill ${m.skill})</small></li>`).join('')}</ul>`;result.appendChild(el);});
+}
+document.getElementById('drawBtn').onclick=()=>{
+  const players=parsePlayers(document.getElementById('players').value);
+  const size=Math.max(2,parseInt(document.getElementById('teamSize').value||'3',10));
+  if(players.length<size){alert('Bitte mehr Spieler eintragen.');return;}
+  const teams=balanceTeams(players,size);
+  renderBalls(players);
+  setTimeout(()=>animateToTeams(teams),500);
+  setTimeout(()=>renderResult(teams),1400);
+};
+document.getElementById('demoBtn').onclick=()=>{document.getElementById('players').value='Mia (8)\nNoah (6)\nLuca (4)\nEmma (9)\nFinn (5)\nLea (7)\nBen (3)\nNina (6)\nTom (8)';};
+</script>
+</body>
+</html>
