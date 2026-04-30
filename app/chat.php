@@ -42,7 +42,7 @@
   <div class="layout">
     <aside class="panel">
       <h3 style="margin:4px 0 8px">Chats</h3>
-      <p class="muted" style="margin-top:0">Hallo <strong id="userLabel">-</strong></p>
+      <div class="row" style="align-items:center;justify-content:space-between;margin-bottom:8px"><p class="muted" style="margin:0">Hallo <strong id="userLabel">-</strong></p><button id="editNameBtn" type="button" class="secondary">Name ändern</button></div>
       <div class="row"><input id="newRoomInput" maxlength="60" placeholder="Neuen Chat-Namen" style="flex:1"><button id="createRoomBtn" type="button">Starten</button></div>
       <div id="rooms" class="rooms"></div>
     </aside>
@@ -68,10 +68,17 @@ const box=document.getElementById('chatBox');
 const roomsEl=document.getElementById('rooms');
 const emojiList=['😀','😁','😂','🤣','😊','😍','🥳','😎','🤝','👍','👏','🔥','💡','✅','🎉','🚀','🙌','😅','🤔','😇','😴','😭','😡','❤️','💙','💚','🧡','💬','📁','🛠️','🌟','🍀'];
 let username=''; let room='';
+let visitedRooms=[];
+let roomLastTs={};
+let notificationsEnabled=false;
 
 function fmt(ts){return new Date(ts*1000).toLocaleString('de-DE');}
-function esc(s){return s.replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function renderEmojiPanel(){const p=document.getElementById('emojiPanel');p.innerHTML='';emojiList.forEach(e=>{const b=document.createElement('button');b.type='button';b.className='emoji';b.textContent=e;b.onclick=()=>{const t=document.getElementById('text');t.value+=e;t.focus();};p.appendChild(b);});}
+function persistState(){sessionStorage.setItem('chat_visited_rooms',JSON.stringify(visitedRooms));sessionStorage.setItem('chat_room_last_ts',JSON.stringify(roomLastTs));}
+function markRoomVisited(name){if(!visitedRooms.includes(name)){visitedRooms.push(name);}persistState();}
+function playNotificationTone(){try{const ctx=new (window.AudioContext||window.webkitAudioContext)();const osc=ctx.createOscillator();const gain=ctx.createGain();osc.connect(gain);gain.connect(ctx.destination);osc.type='sine';osc.frequency.value=880;gain.gain.setValueAtTime(0.0001,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(0.2,ctx.currentTime+0.01);gain.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.25);osc.start();osc.stop(ctx.currentTime+0.26);}catch(e){}}
+function notify(message){if(notificationsEnabled && Notification.permission==='granted'){new Notification(message);}playNotificationTone();}
 
 async function loadRooms(){
   const r=await fetch('chat_api.php?action=listRooms');
@@ -82,21 +89,49 @@ async function loadRooms(){
   rooms.forEach(name=>{const b=document.createElement('button');b.type='button';b.className='roomBtn'+(name===room?' active':'');b.textContent=name;b.onclick=()=>openChat(name);roomsEl.appendChild(b);});
 }
 
+async function fetchLatestTs(roomName){
+  const r=await fetch('chat_api.php?action=list&room='+encodeURIComponent(roomName));
+  const d=await r.json();
+  const messages=d.messages||[];
+  if(!messages.length){return 0;}
+  return messages[messages.length-1].ts||0;
+}
+
 async function load(){
   if(!room){return;}
   const r=await fetch('chat_api.php?action=list&room='+encodeURIComponent(room));
   const d=await r.json();
-  box.innerHTML=(d.messages||[]).map(m=>`<div class="m"><div class="meta"><strong>${esc(m.user)}</strong> • ${fmt(m.ts)}</div><div>${esc(m.text)}</div></div>`).join('') || '<div class="muted">Noch keine Nachrichten.</div>';
+  const messages=d.messages||[];
+  box.innerHTML=messages.map(m=>`<div class="m"><div class="meta"><strong>${esc(m.user)}</strong> • ${fmt(m.ts)}</div><div>${esc(m.text)}</div></div>`).join('') || '<div class="muted">Noch keine Nachrichten.</div>';
   box.scrollTop=box.scrollHeight;
   document.getElementById('roomLabel').textContent='Raum: '+room;
+  if(messages.length){roomLastTs[room]=messages[messages.length-1].ts||0;persistState();}
   await loadRooms();
 }
 
-function openChat(chosenRoom){
+async function openChat(chosenRoom){
   if(!username||!chosenRoom){return;}
   room=chosenRoom;
   sessionStorage.setItem('chat_room',room);
-  load();
+  markRoomVisited(room);
+  await load();
+}
+
+async function pollVisitedRooms(){
+  if(!username || !visitedRooms.length){return;}
+  for(const roomName of visitedRooms){
+    if(roomName===room){continue;}
+    const latest=await fetchLatestTs(roomName);
+    const previous=roomLastTs[roomName]||0;
+    if(latest>previous && previous>0){
+      roomLastTs[roomName]=latest;
+      persistState();
+      notify('Neue Nachricht in Chat: '+roomName);
+    } else if(previous===0 && latest>0){
+      roomLastTs[roomName]=latest;
+      persistState();
+    }
+  }
 }
 
 document.getElementById('continueBtn').onclick=async()=>{
@@ -106,7 +141,16 @@ document.getElementById('continueBtn').onclick=async()=>{
   document.getElementById('userLabel').textContent=username;
   sessionStorage.setItem('chat_username',username);
   document.getElementById('nameGate').style.display='none';
+  if('Notification' in window){
+    const p=await Notification.requestPermission();
+    notificationsEnabled=(p==='granted');
+  }
   await loadRooms();
+};
+
+document.getElementById('editNameBtn').onclick=()=>{
+  document.getElementById('nameInput').value=username;
+  document.getElementById('nameGate').style.display='grid';
 };
 
 document.getElementById('createRoomBtn').onclick=async()=>{
@@ -139,11 +183,14 @@ document.addEventListener('click',(e)=>{
   if(!panel.contains(e.target) && e.target!==toggle){panel.style.display='none';}
 });
 
-setInterval(()=>{if(username&&room){load();}},2000);
+setInterval(()=>{if(username&&room){load();}if(username){pollVisitedRooms();}},3000);
 (async()=>{
   renderEmojiPanel();
+  visitedRooms=JSON.parse(sessionStorage.getItem('chat_visited_rooms')||'[]');
+  roomLastTs=JSON.parse(sessionStorage.getItem('chat_room_last_ts')||'{}');
   const u=sessionStorage.getItem('chat_username')||'';
   const r=sessionStorage.getItem('chat_room')||'';
+  if('Notification' in window){notificationsEnabled=(Notification.permission==='granted');}
   if(u){
     username=u;
     document.getElementById('nameInput').value=u;
