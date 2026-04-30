@@ -43,8 +43,8 @@
 <body>
 <div class="wrap"><div class="app-shell">
     <aside class="panel sidebar">
-      <a class="sidebar-brand" href="index.php"><img src="../media/LocalLoot_logo.png" alt="LocalLoot Logo"><div><strong style="font-size:1.2rem">LocalLoot</strong><div class="muted">Local file & game sharing</div></div></a>
-      <div class="module-links"><a class="side-link" href="file-browser.php">📁 Files</a><a class="side-link" href="#">🎮 Game Library</a><a class="side-link active" href="chat.php">💬 Chat</a><a class="side-link" href="#">🖥️ Server Status</a></div>
+      <a class="sidebar-brand" href="index.php"><img src="../media/LocalLoot_logo.png" alt="LocalLoot Logo"><div><strong style="font-size:1.2rem">LocalLoot</strong><div class="muted">Local Tools for LAN-Parties</div></div></a>
+      <div class="module-links"><a class="side-link" href="file-browser.php">📁 Files</a><a class="side-link" href="#">🎮 Game Library</a><a class="side-link active" href="chat.php">💬 Chat</a><a class="side-link" href="#">🧰 Tools</a></div>
       <h3 style="margin:8px 0 8px">Chats</h3>
       <div class="row" style="align-items:center;justify-content:space-between;margin-bottom:8px"><p class="muted" style="margin:0">Hallo <strong id="userLabel">-</strong></p><button id="editNameBtn" type="button" class="secondary">Name ändern</button></div>
       <div class="new-room-wrap"><div class="row"><input id="newRoomInput" maxlength="60" placeholder="Neuen Chat-Namen" style="flex:1"><button id="createRoomBtn" type="button">Starten</button></div><div class="row"><label class="muted" style="display:flex;align-items:center;gap:8px"><span>Passwortschutz</span><span class="switch"><input id="protectToggle" type="checkbox"><span class="slider"></span></span></label></div><div class="password-wrap" id="passwordWrap"><input id="newRoomPassword" type="password" maxlength="64" placeholder="Chat-Passwort" style="max-width:220px"></div></div>
