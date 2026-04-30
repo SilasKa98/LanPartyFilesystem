@@ -232,7 +232,7 @@ if(isset($_GET["Pfad0"])){
                 $pathDeletePart = "&".substr($_SERVER['REQUEST_URI'], $postionInUrl);
                 $pathBack = str_replace($pathDeletePart, "", $_SERVER['REQUEST_URI']);
                 $pfadName = "Pfad".$i;
-                if($i <= 0){ print "<a class='crumb-target' data-path='".htmlspecialchars($absRoot, ENT_QUOTES)."' href='index.php'>mainStorage</a>"; }
+                if($i <= 0){ print "<a class='crumb-target' data-path='".htmlspecialchars($absRoot, ENT_QUOTES)."' href='file-browser.php'>mainStorage</a>"; }
                 $navPath .= "/".$_GET[$pfadName];
                 print " → <a class='crumb-target' data-path='".htmlspecialchars($navPath, ENT_QUOTES)."' href='".$pathBack."'>".$_GET[$pfadName]."</a>";
             }
@@ -242,6 +242,10 @@ if(isset($_GET["Pfad0"])){
     <?php
     $scanned_directory = array_values(array_diff(scandir($path), array('..', '.')));
     if(count($scanned_directory) === 0){ print "<p id='noContent'>Dieser Ordner ist leer</p>"; }
+    $folderCount = 0;
+    $fileCount = 0;
+    foreach($scanned_directory as $entryMeta){ if(strpos($entryMeta, '.') === false){ $folderCount++; } else { $fileCount++; } }
+    $currentDisplayPath = isset($_GET['Pfad0']) ? ('Shared Files / '.implode(' / ', array_map(fn($i) => $_GET['Pfad'.$i], range(0, $cntPath-1)))) : 'Shared Files / mainStorage';
 
     print "<p class='section-title'>Folders</p><div class='grid'>";
     foreach($scanned_directory as $entry){
@@ -281,7 +285,6 @@ if(isset($_GET["Pfad0"])){
     ?>
 </div></main><aside class="rightpanel"><div class="detail-card"><div style="font-size:.85rem;color:#7e8eaa;margin-bottom:8px;">DETAILS</div><h3 id="detailName" style="margin:0 0 8px;">Aktuelles Verzeichnis</h3><p id="detailSubtitle" style="margin:0 0 12px;color:#6c7d98;"><?php echo htmlspecialchars($currentDisplayPath, ENT_QUOTES); ?></p><div class="meta-row"><span>Ordner</span><strong id="detailFolders"><?php echo $folderCount; ?></strong></div><div class="meta-row"><span>Dateien</span><strong id="detailFiles"><?php echo $fileCount; ?></strong></div><div class="meta-row"><span>Pfad</span><span id="detailPath"><?php echo htmlspecialchars($path, ENT_QUOTES); ?></span></div><div class="quick-actions"><a id="detailDownload" class="btn primary" href="#">Download</a><button class="btn" type="button" id="detailCopy">Copy Link</button><button class="btn" type="button">Add to Favorites</button></div></div></aside></div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<div id="previewModal" class="modal"><div class="modal-content"><span class="close" id="closePreview" style="float:right;cursor:pointer;">&times;</span><div id="previewBody"></div><div id="previewActions" style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;"></div></div></div>
 <script>
     var modal = document.getElementById("myModal");
     var openFolderBtn = document.getElementById("myBtn");
@@ -313,19 +316,7 @@ if(isset($_GET["Pfad0"])){
         document.getElementById("detailName").textContent = fileName;
         document.getElementById("detailSubtitle").textContent = "Datei ausgewählt";
         document.getElementById("detailDownload").setAttribute("href", downloadPath);
-        const modal = document.getElementById("previewModal");
-        const body = document.getElementById("previewBody");
-        const actions = document.getElementById("previewActions");
-        if(/\.(png|jpg|jpeg|gif|svg)$/i.test(fileName)){
-            body.innerHTML = `<p><strong>${fileName}</strong></p><img src="${filePath}" style="max-width:100%;max-height:60vh;">`;
-        } else {
-            body.innerHTML = `<p><strong>${fileName}</strong></p><p>Keine Vorschau für diesen Dateityp.</p>`;
-        }
-        actions.innerHTML = `
-            <a class="btn" href="${downloadPath}" download>Download</a>
-            <button class="btn" type="button" onclick="deleteFromPreview('${fileName.replace(/'/g, "\\'")}')">Delete</button>
-        `;
-        modal.style.display = "block";
+        document.getElementById("detailPath").textContent = downloadPath;
     }
     function moveFileToTargetPath(fileName, targetPath){
         if(!fileName || !targetPath) return;
@@ -354,10 +345,6 @@ if(isset($_GET["Pfad0"])){
         document.body.appendChild(form);
         form.submit();
     }
-    document.getElementById("closePreview").onclick = function(){ document.getElementById("previewModal").style.display = "none"; };
-    document.getElementById("previewModal").addEventListener('click', function(event){
-        if(event.target === this){ this.style.display = "none"; }
-    });
     document.addEventListener("DOMContentLoaded", function(){
         updateDetailsPanelForDirectory();
         preventBrowserDropNavigation();
