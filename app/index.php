@@ -42,14 +42,14 @@
           <a class="btn ghost" href="file-browser.php#uploadWrapper">Open File Sharing</a>
         </div>
       </div>
-      <div class="hero-art"><div class="tile server"></div><div class="tile folder"></div></div>
+      <div class="hero-art"><div class="tile folder" style='left:50%;transform:translateX(-50%);bottom:85px;'></div></div>
     </section>
 
     <section class="modules">
       <a class="module" href="file-browser.php"><h3>📁 Files</h3><p>Dateien durchsuchen, öffnen und verwalten.</p></a>
-      <a class="module" href="#"><h3>🎮 Game Library</h3><p>Spielekatalog für LAN-Sessions (in Planung).</p></a>
+      <a class="module" href="game-library.php"><h3>🎮 Game Library</h3><p>Erkannte Spiele aus mainStorage inkl. Schnellzugriff.</p></a>
       <a class="module" href="chat.php"><h3>💬 Chat</h3><p>Team-Kommunikation im gemeinsamen Chat-Raum.</p></a>
-      <a class="module" href="#"><h3>🖥️ Server Status <small style="color:#1f6fff;">TBA</small></h3><p>Server-Metriken und Health-Checks folgen bald.</p></a>
+      <a class="module" href="tools.php"><h3>🧰 Tools</h3><p>Nützliche Zusatzfunktionen für eure LAN-Session.</p></a>
     </section>
   </div>
 <script src="chat_notifier.js"></script>
