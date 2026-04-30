@@ -46,10 +46,10 @@
     </section>
 
     <section class="modules">
-      <a class="module" href="file-browser.php"><h3>File Browser</h3><p>Dateien durchsuchen, öffnen und verwalten.</p></a>
-      <a class="module" href="file-browser.php#uploadWrapper"><h3>File Sharing</h3><p>Dateien hochladen und im LAN teilen.</p></a>
-      <a class="module" href="file-browser.php#searchInput"><h3>Search</h3><p>Global nach Dateien und Ordnern suchen.</p></a>
-      <a class="module" href="file-browser.php#breadcrumb"><h3>Navigation</h3><p>Schnell im Pfad navigieren und Ordner wechseln.</p></a>
+      <a class="module" href="file-browser.php"><h3>📁 Files</h3><p>Dateien durchsuchen, öffnen und verwalten.</p></a>
+      <a class="module" href="#"><h3>🎮 Game Library</h3><p>Spielekatalog für LAN-Sessions (in Planung).</p></a>
+      <a class="module" href="#"><h3>💬 Chat</h3><p>Team-Kommunikation und schnelle Abstimmung (in Planung).</p></a>
+      <a class="module" href="#"><h3>🖥️ Server Status <small style="color:#1f6fff;">TBA</small></h3><p>Server-Metriken und Health-Checks folgen bald.</p></a>
     </section>
   </div>
 </body>

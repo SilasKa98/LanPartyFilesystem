@@ -74,7 +74,7 @@
         .modal-content { width:min(420px,90%); margin: 15vh auto; background: #e7f4ff; color:#09203f; border-radius: 14px; padding: 16px; border:1px solid #62c7ff; }
         .modal-content input { width:100%; padding:10px; margin-bottom: 10px; }
         #noContent { text-align:center; color:var(--muted); margin-top: 24px; }
-        .toast { position:fixed; left:50%; transform:translateX(-50%); bottom:20px; background:#07173e; border:1px solid var(--border-soft); color:var(--text); padding:10px 14px; border-radius:10px; display:none; z-index:10; box-shadow: var(--glow); }
+        .toast { position:fixed; left:50%; transform:translateX(-50%); bottom:20px; background:#ffffff; border:1px solid #d6e3fb; color:#1b3763; padding:10px 14px; border-radius:12px; display:none; z-index:10; box-shadow:0 10px 26px rgba(22,62,132,.18); font-weight:600; }
     </style>
     <script>
         document.addEventListener('contextmenu', event => event.preventDefault());
