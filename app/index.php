@@ -22,6 +22,25 @@
         * { box-sizing: border-box; }
         body { margin: 0; font-family: "Inter", "Segoe UI", system-ui, Arial, sans-serif; background: radial-gradient(circle at 18% 12%, #0d2f6c 0%, var(--bg-soft) 30%, var(--bg) 65%, #01040f 100%); color: var(--text); min-height:100vh; line-height:1.45; }
         #content { max-width: 1200px; margin: 0 auto; padding: 24px; }
+        .landing { background: linear-gradient(135deg, rgba(220,238,255,.14), rgba(35,84,173,.18)); border: 1px solid var(--border-soft); border-radius: 18px; padding: 28px; margin-bottom: 18px; display:grid; grid-template-columns: 1.1fr .9fr; gap: 24px; align-items:center; }
+        .landing h2 { font-size: clamp(2rem, 4vw, 3.8rem); line-height: 1.02; margin: 0 0 12px; }
+        .landing h2 .accent { color: #4bb0ff; }
+        .landing p { margin: 0 0 18px; color: #cbe6ff; max-width: 58ch; }
+        .landing-actions { display:flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+        .landing-usp { display:flex; flex-wrap:wrap; gap: 14px; color:#b8dcff; font-size: .95rem; }
+        .landing-hero { min-height: 260px; border-radius: 16px; background: radial-gradient(circle at 35% 20%, rgba(88,168,255,.52), rgba(5,20,54,.22) 42%), linear-gradient(165deg, rgba(10,37,82,.9), rgba(10,31,67,.6)); border:1px solid rgba(112,198,255,.35); position:relative; overflow:hidden; }
+        .landing-hero::before, .landing-hero::after { content:''; position:absolute; border-radius:50%; border:1px solid rgba(126,206,255,.35); }
+        .landing-hero::before { width:240px; height:240px; right:-20px; top:10px; }
+        .landing-hero::after { width:320px; height:320px; right:-60px; top:-30px; opacity:.5; }
+        .hero-tile { position:absolute; background: linear-gradient(180deg, #1f8bff, #1260d7); border-radius: 18px; box-shadow: 0 14px 28px rgba(11,36,72,.45); }
+        .hero-tile.server { width: 180px; height: 180px; top: 30px; right: 90px; background: linear-gradient(180deg,#0f2f66,#092246); }
+        .hero-tile.folder { width: 210px; height: 140px; bottom: 48px; left: 46px; }
+        .module-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin-bottom: 18px; }
+        .module-card { text-decoration:none; color: var(--text); background: linear-gradient(180deg, rgba(8, 20, 52, 0.92), rgba(10, 30, 72, 0.84)); border:1px solid var(--border-soft); border-radius: 14px; padding: 14px; display:block; transition:.2s ease; }
+        .module-card:hover { transform: translateY(-2px); border-color:#56d9ff; box-shadow: var(--glow); }
+        .module-card h3 { margin: 0 0 4px; font-size: 1.05rem; }
+        .module-card p { margin: 0; font-size: .92rem; color:#b8dbf6; }
+        @media (max-width: 900px){ .landing{ grid-template-columns:1fr; } .landing-hero{ min-height:210px; } }
         .topbar { display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom: 16px; background: linear-gradient(90deg, rgba(7,24,62,.95), rgba(5,16,42,.85)); border: 1px solid var(--border-soft); box-shadow: var(--glow); padding: 14px 16px; border-radius: 14px; }
         .brand { display:flex; align-items:center; gap:10px; }
         .brand-logo { width:44px; height:44px; border-radius:10px; background:rgba(11,41,84,.75); padding:4px; object-fit:contain; box-shadow: inset 0 0 16px rgba(30,199,255,.25); }
@@ -212,9 +231,27 @@ if(isset($_GET["Pfad0"])){
 <div id="myModal" class="modal"><div class="modal-content"><span class="close" style="float:right;cursor:pointer;">&times;</span><p>Neuer Ordner</p><form action="createFolder.php" method='post'><input type="text" pattern="[^|,/:?*\\]+" value="unbenannter Ordner" name="folderName" required><input type="hidden" name="path" value="<?php echo $path; ?>"><input type="hidden" value="<?php echo $_SERVER['REQUEST_URI']; ?>" name="currentUrl"><button class="btn" type="submit">Erstellen</button><button class="btn" id="cancelNewFolder" type="button">Abbrechen</button></form></div></div>
 <div id="content">
     <div class="topbar"><div class="brand"><img src="../media/folder-open.svg" class="brand-logo" alt="LocalLoot Logo"><h1>LocalLoot</h1></div><div class="toolbar"><button class="btn" onclick="history.back()">⟵ Zurück</button><div class="search-wrap"><input id="searchInput" class="input" placeholder="Dateien/Ordner global suchen" oninput="filterEntriesDebounced();searchAllPaths()"><div id="searchResults" class="search-results"></div></div><select id="sortSelect" class="input" onchange="sortEntries()"><option value="nameAsc">Name A-Z</option><option value="nameDesc">Name Z-A</option></select><button id="viewToggle" class="btn" onclick="toggleView()" aria-pressed="false">☰ List View</button><button id="copyPathBtn" class="btn" onclick="copyCurrentPath()">⎘ Pfad kopieren</button></div></div>
+    <section class='landing'>
+        <div>
+            <h2>Share Games.<br><span class='accent'>Share Files.</span><br>Stay Local.</h2>
+            <p>Dein LAN-Dashboard für alle Module: starte direkt den File Browser oder springe zum File Sharing Upload-Bereich – alles lokal, schnell und ohne Cloud.</p>
+            <div class='landing-actions'>
+                <a class='btn' href='#browser-section'>🌐 Open File Browser</a>
+                <a class='btn' href='#uploadWrapper'>📤 Open File Sharing</a>
+            </div>
+            <div class='landing-usp'><span>🛡️ 100% Lokal</span><span>⚡ Blazing Fast</span><span>🔒 Private & Secure</span><span>👥 Made for LAN Parties</span></div>
+        </div>
+        <div class='landing-hero' aria-hidden='true'><div class='hero-tile server'></div><div class='hero-tile folder'></div></div>
+    </section>
+    <section class='module-grid'>
+        <a class='module-card' href='#browser-section'><h3>File Browser</h3><p>Durchsuche Dateien & Ordner in deinem mainStorage mit Vorschau und Download.</p></a>
+        <a class='module-card' href='#uploadWrapper'><h3>File Sharing</h3><p>Teile Patches, Saves und Medien schnell per Drag & Drop Upload im LAN.</p></a>
+        <a class='module-card' href='#searchInput'><h3>Global Search</h3><p>Suche dateiübergreifend und springe direkt zum Trefferpfad.</p></a>
+        <a class='module-card' href='#breadcrumb'><h3>Navigation</h3><p>Navigiere über Breadcrumbs und kopiere den aktuellen Pfad mit einem Klick.</p></a>
+    </section>
     <div id="uploadWrapper"><div class="helper">Drag & drop files here or click to browse.</div><div id="uploadStatus" class="helper"></div><form method="post" action="uploadFiles.php" enctype="multipart/form-data"><div class="uploadInputWrap"><div class="uploadButtonFake">Choose files</div><input id="uploadFile" type="file" onchange="changeText(this);" name="files[]" multiple></div><input type="hidden" value="<?php echo $path; ?>" name="path"><input type="hidden" value="<?php echo $_SERVER['REQUEST_URI']; ?>" name="currentUrl"></form></div>
 
-    <div id="breadcrumb"><span id="currentPathText"><?php
+    <div id="breadcrumb" style="scroll-margin-top:16px;"><span id='browser-section'></span><span id="currentPathText"><?php
         if(isset($_GET["Pfad0"])){
             $absRoot = realpath("../mainStorage");
             $navPath = $absRoot;
