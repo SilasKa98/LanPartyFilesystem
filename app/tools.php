@@ -12,7 +12,7 @@ textarea{width:100%;min-height:120px;resize:vertical}.btn{background:#1f6fff;col
 #arena{margin-top:16px;min-height:240px;position:relative;overflow:hidden;border:1px dashed #c9dcff;border-radius:14px;background:linear-gradient(180deg,#f7fbff,#eff6ff)}
 .ball{position:absolute;padding:7px 10px;border-radius:999px;background:#1f6fff;color:#fff;font-weight:700;font-size:.88rem;box-shadow:0 8px 20px rgba(31,111,255,.3);transition:transform .7s ease,left .7s ease,top .7s ease,background .7s ease}
 .team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px}
-.team{background:#fff;border:1px solid #dbe7ff;border-radius:14px;padding:12px}.team h3{margin:0 0 8px}.meta{color:#58709a;font-size:.9rem}
+.team{background:#fff;border:1px solid #dbe7ff;border-radius:14px;padding:12px}.team h3{margin:0 0 8px}.meta{color:#58709a;font-size:.9rem}.bracketWrap{background:#fff;border:1px solid #dbe7ff;border-radius:14px;padding:10px;overflow:auto}.bracketSvg{min-width:900px;height:420px}.node{fill:#1f6fff;stroke:#0f4ccc;stroke-width:1.5}.nodeText{fill:#fff;font-size:11px;font-weight:700}.edge{stroke:#7aa7ff;stroke-width:2;fill:none;stroke-dasharray:8 6;animation:dash 1.8s linear infinite}@keyframes dash{to{stroke-dashoffset:-28}}
 </style>
 </head>
 <body>
@@ -93,20 +93,36 @@ function renderTournament(teams){
   const mode=document.getElementById('tournamentType').value;
   box.innerHTML='';
   if(!teams.length){return;}
+
+  const drawBracket=(rounds,title)=>{
+    const wrap=document.createElement('div');wrap.className='bracketWrap';
+    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('class','bracketSvg');
+    const roundGap=220,nodeW=150,nodeH=28,startX=30,startY=30,slotGap=58;
+    const positions=[];
+    rounds.forEach((matches,ri)=>{positions[ri]=[];matches.forEach((m,mi)=>{const x=startX+ri*roundGap;const y=startY+mi*slotGap*Math.pow(2,ri);positions[ri][mi]={x,y,m};
+      const rect=document.createElementNS(svg.namespaceURI,'rect');rect.setAttribute('x',x);rect.setAttribute('y',y);rect.setAttribute('width',nodeW);rect.setAttribute('height',nodeH);rect.setAttribute('rx',10);rect.setAttribute('class','node');svg.appendChild(rect);
+      const text=document.createElementNS(svg.namespaceURI,'text');text.setAttribute('x',x+8);text.setAttribute('y',y+18);text.setAttribute('class','nodeText');text.textContent=`${m.a.name} vs ${m.b.name}`;svg.appendChild(text);
+    });});
+    for(let r=0;r<positions.length-1;r++){
+      positions[r].forEach((p,i)=>{const next=positions[r+1][Math.floor(i/2)];if(!next)return;
+        const path=document.createElementNS(svg.namespaceURI,'path');
+        const x1=p.x+nodeW,y1=p.y+nodeH/2,x2=next.x,y2=next.y+nodeH/2,mx=(x1+x2)/2;
+        path.setAttribute('d',`M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`);
+        path.setAttribute('class','edge');svg.insertBefore(path,svg.firstChild);
+      });
+    }
+    const h=document.createElement('h3');h.textContent=title;wrap.appendChild(h);wrap.appendChild(svg);box.appendChild(wrap);
+  };
+
   if(mode==='single'){
-    const rounds=pairSingle(teams);
-    rounds.forEach((matches,ri)=>{const col=document.createElement('div');col.className='team';col.innerHTML=`<h3>Runde ${ri+1}</h3>`+matches.map((m,mi)=>`<div class=\"meta\"><strong>Match ${mi+1}</strong><br>${m.a.name} (${m.a.skill}) vs ${m.b.name} (${m.b.skill})</div>`).join('<hr>');box.appendChild(col);});
+    drawBracket(pairSingle(teams),'Single Elimination');
   } else if(mode==='double'){
-    const upper=pairSingle(teams);
+    drawBracket(pairSingle(teams),'Upper Bracket');
     const lowerTeams=teams.map((t,i)=>({name:'Team '+(i+1),skill:Math.max(1,t.skill-1),members:t.members}));
-    const lower=pairSingle(lowerTeams);
-    const up=document.createElement('div');up.className='team';up.innerHTML='<h3>Upper Bracket</h3>'+upper.flatMap((m,r)=>m.map((x,i)=>`<div class=\"meta\">R${r+1}M${i+1}: ${x.a.name} vs ${x.b.name}</div>`)).join('');
-    const low=document.createElement('div');low.className='team';low.innerHTML='<h3>Lower Bracket</h3>'+lower.flatMap((m,r)=>m.map((x,i)=>`<div class=\"meta\">R${r+1}M${i+1}: ${x.a.name} vs ${x.b.name}</div>`)).join('');
-    const fin=document.createElement('div');fin.className='team';fin.innerHTML='<h3>Finale</h3><div class=\"meta\">Gewinner Upper Bracket vs Gewinner Lower Bracket</div>';
-    box.append(up,low,fin);
+    drawBracket(pairSingle(lowerTeams),'Lower Bracket');
   } else {
-    const col=document.createElement('div');col.className='team';col.innerHTML='<h3>Round Robin</h3>';
-    for(let i=0;i<teams.length;i++){for(let j=i+1;j<teams.length;j++){const a='Team '+(i+1),b='Team '+(j+1);col.innerHTML+=`<div class=\"meta\">${a} vs ${b}</div>`;}}
+    const col=document.createElement('div');col.className='team';col.innerHTML='<h3>Round Robin Paarungen</h3>';
+    for(let i=0;i<teams.length;i++){for(let j=i+1;j<teams.length;j++){const a='Team '+(i+1),b='Team '+(j+1);col.innerHTML+=`<div class="meta">${a} vs ${b}</div>`;}}
     box.appendChild(col);
   }
 }
