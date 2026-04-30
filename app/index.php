@@ -24,7 +24,7 @@
         #content { max-width: 1200px; margin: 0 auto; padding: 24px; }
         .topbar { display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom: 16px; background: linear-gradient(90deg, rgba(7,24,62,.95), rgba(5,16,42,.85)); border: 1px solid var(--border-soft); box-shadow: var(--glow); padding: 14px 16px; border-radius: 14px; }
         .brand { display:flex; align-items:center; gap:10px; }
-        .brand-logo { width:44px; height:44px; border-radius:10px; background:rgba(11,41,84,.75); padding:8px; box-shadow: inset 0 0 16px rgba(30,199,255,.25); }
+        .brand-logo { width:44px; height:44px; border-radius:10px; background:rgba(11,41,84,.75); padding:4px; object-fit:contain; box-shadow: inset 0 0 16px rgba(30,199,255,.25); }
         h1 { margin:0; font-size: 1.5rem; letter-spacing: .01em; text-shadow: 0 0 10px rgba(34, 198, 255, .28); font-weight:700; }
         .toolbar { display:flex; gap:10px; align-items:center; }
         .input, .btn { border:1px solid var(--border-soft); background: linear-gradient(180deg, rgba(18, 48, 96, 0.95), rgba(7, 23, 56, 0.95)); color: #eef8ff; border-radius: 10px; padding: 10px 12px; box-shadow: inset 0 0 12px rgba(31, 112, 183, 0.3); font-size:.95rem; font-weight:600; }
@@ -138,12 +138,17 @@
             const box = document.getElementById('searchResults');
             if(!results.length){ box.innerHTML = '<div class=\"search-node\">Keine Treffer</div>'; box.classList.add('show'); return; }
             box.innerHTML = '';
+            const buildUrlFromRelativePath = (relativePath, type) => {
+                const normalized = String(relativePath || '').replace(/^\/+|\/+$/g, '');
+                const folderPath = type === 'file' ? normalized.split('/').slice(0, -1).join('/') : normalized;
+                if (!folderPath) return 'index.php';
+                const parts = folderPath.split('/').filter(Boolean);
+                return 'index.php?' + parts.map((s, i) => 'Pfad' + i + '=' + encodeURIComponent(s)).join('&');
+            };
             results.forEach(item => {
                 const depth = (String(item.relativePath || '').match(/\//g) || []).length;
                 const icon = item.type === 'folder' ? '📁' : '📄';
-                const url = item.type === 'folder'
-                    ? 'index.php?' + String(item.relativePath).split('/').map((s, i) => 'Pfad'+i+'='+encodeURIComponent(s)).join('&')
-                    : '#';
+                const url = buildUrlFromRelativePath(item.relativePath, item.type);
                 const node = document.createElement('div');
                 node.className = 'search-node';
                 node.style.paddingLeft = `${8 + depth * 16}px`;
@@ -207,7 +212,7 @@ if(isset($_GET["Pfad0"])){
 <div id='leftSidebar'><img src='../media/folder-plus.svg' id="myBtn"></div>
 <div id="myModal" class="modal"><div class="modal-content"><span class="close" style="float:right;cursor:pointer;">&times;</span><p>Neuer Ordner</p><form action="createFolder.php" method='post'><input type="text" pattern="[^|,/:?*\\]+" value="unbenannter Ordner" name="folderName" required><input type="hidden" name="path" value="<?php echo $path; ?>"><input type="hidden" value="<?php echo $_SERVER['REQUEST_URI']; ?>" name="currentUrl"><button class="btn" type="submit">Erstellen</button><button class="btn" id="cancelNewFolder" type="button">Abbrechen</button></form></div></div>
 <div id="content">
-    <div class="topbar"><div class="brand"><img src="../media/folder-open.svg" class="brand-logo" alt="LanPartyFilesystem Logo"><h1>LanPartyFilesystem</h1></div><div class="toolbar"><button class="btn" onclick="history.back()">⟵ Zurück</button><div class="search-wrap"><input id="searchInput" class="input" placeholder="Dateien/Ordner global suchen" oninput="filterEntriesDebounced();searchAllPaths()"><div id="searchResults" class="search-results"></div></div><select id="sortSelect" class="input" onchange="sortEntries()"><option value="nameAsc">Name A-Z</option><option value="nameDesc">Name Z-A</option></select><button id="viewToggle" class="btn" onclick="toggleView()" aria-pressed="false">☰ List View</button><button id="copyPathBtn" class="btn" onclick="copyCurrentPath()">⎘ Pfad kopieren</button></div></div>
+    <div class="topbar"><div class="brand"><img src="../media/folder-open.svg" class="brand-logo" alt="LocalLoot Logo"><h1>LocalLoot</h1></div><div class="toolbar"><button class="btn" onclick="history.back()">⟵ Zurück</button><div class="search-wrap"><input id="searchInput" class="input" placeholder="Dateien/Ordner global suchen" oninput="filterEntriesDebounced();searchAllPaths()"><div id="searchResults" class="search-results"></div></div><select id="sortSelect" class="input" onchange="sortEntries()"><option value="nameAsc">Name A-Z</option><option value="nameDesc">Name Z-A</option></select><button id="viewToggle" class="btn" onclick="toggleView()" aria-pressed="false">☰ List View</button><button id="copyPathBtn" class="btn" onclick="copyCurrentPath()">⎘ Pfad kopieren</button></div></div>
     <div id="uploadWrapper"><div class="helper">Drag & drop files here or click to browse.</div><div id="uploadStatus" class="helper"></div><form method="post" action="uploadFiles.php" enctype="multipart/form-data"><div class="uploadInputWrap"><div class="uploadButtonFake">Choose files</div><input id="uploadFile" type="file" onchange="changeText(this);" name="files[]" multiple></div><input type="hidden" value="<?php echo $path; ?>" name="path"><input type="hidden" value="<?php echo $_SERVER['REQUEST_URI']; ?>" name="currentUrl"></form></div>
 
     <div id="breadcrumb"><span id="currentPathText"><?php
@@ -280,11 +285,6 @@ if(isset($_GET["Pfad0"])){
         if (event.target == modal) modal.style.display = "none";
         if (!event.target.closest('.search-wrap')) {
             document.getElementById('searchResults').classList.remove('show');
-        }
-        if (event.target.classList && event.target.classList.contains('search-node')) {
-            if (event.target.dataset.type === 'folder') {
-                window.location.href = event.target.dataset.url;
-            }
         }
         if (!event.target.matches('.card, .card *')) {
             document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
@@ -398,6 +398,11 @@ if(isset($_GET["Pfad0"])){
                 const targetPath = target.dataset.path;
                 if (fileName && targetPath) moveFileToTargetPath(fileName, targetPath);
             });
+        });
+        document.getElementById("searchResults").addEventListener("click", function(event){
+            const node = event.target.closest(".search-node");
+            if(!node || !node.dataset.url){ return; }
+            window.location.href = node.dataset.url;
         });
     });
 </script>
