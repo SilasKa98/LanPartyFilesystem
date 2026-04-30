@@ -77,7 +77,7 @@ let audioUnlocked=false;
 function fmt(ts){return new Date(ts*1000).toLocaleString('de-DE');}
 function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function renderEmojiPanel(){const p=document.getElementById('emojiPanel');p.innerHTML='';emojiList.forEach(e=>{const b=document.createElement('button');b.type='button';b.className='emoji';b.textContent=e;b.onclick=()=>{const t=document.getElementById('text');t.value+=e;t.focus();};p.appendChild(b);});}
-function persistState(){sessionStorage.setItem('chat_visited_rooms',JSON.stringify(visitedRooms));sessionStorage.setItem('chat_room_last_ts',JSON.stringify(roomLastTs));}
+function persistState(){sessionStorage.setItem('chat_visited_rooms',JSON.stringify(visitedRooms));sessionStorage.setItem('chat_room_last_ts',JSON.stringify(roomLastTs));localStorage.setItem('chat_visited_rooms',JSON.stringify(visitedRooms));localStorage.setItem('chat_room_last_ts',JSON.stringify(roomLastTs));}
 function markRoomVisited(name){if(!visitedRooms.includes(name)){visitedRooms.push(name);}persistState();}
 function playNotificationTone(){
   const audio=document.getElementById('notifAudio');
@@ -88,7 +88,7 @@ function playNotificationTone(){
 }
 function notify(message){
   if(notificationsEnabled && Notification.permission==='granted'){
-    new Notification(message,{body:'Öffne den Chat, um zu antworten.'});
+    new Notification(message.title,{body:message.body});
   }
   playNotificationTone();
 }
@@ -106,8 +106,8 @@ async function fetchLatestTs(roomName){
   const r=await fetch('chat_api.php?action=list&room='+encodeURIComponent(roomName));
   const d=await r.json();
   const messages=d.messages||[];
-  if(!messages.length){return 0;}
-  return messages[messages.length-1].ts||0;
+  if(!messages.length){return null;}
+  return messages[messages.length-1];
 }
 
 async function load(){
@@ -126,7 +126,7 @@ async function load(){
 async function openChat(chosenRoom){
   if(!username||!chosenRoom){return;}
   room=chosenRoom;
-  sessionStorage.setItem('chat_room',room);
+  sessionStorage.setItem('chat_room',room);localStorage.setItem('chat_room',room);
   markRoomVisited(room);
   await load();
 }
@@ -135,12 +135,13 @@ async function pollVisitedRooms(){
   if(!username || !visitedRooms.length){return;}
   for(const roomName of visitedRooms){
     if(roomName===room){continue;}
-    const latest=await fetchLatestTs(roomName);
+    const latestMsg=await fetchLatestTs(roomName);
+    const latest=(latestMsg&&latestMsg.ts)||0;
     const previous=roomLastTs[roomName]||0;
     if(latest>previous && previous>0){
       roomLastTs[roomName]=latest;
       persistState();
-      notify('Neue Nachricht in Chat: '+roomName);
+      notify({title:'Neues im Chat '+roomName, body:(latestMsg.user||'Unbekannt')+': '+(latestMsg.text||'')});
     } else if(previous===0 && latest>0){
       roomLastTs[roomName]=latest;
       persistState();
@@ -162,7 +163,7 @@ document.getElementById('continueBtn').onclick=async()=>{
   if(!n){return;}
   username=n;
   document.getElementById('userLabel').textContent=username;
-  sessionStorage.setItem('chat_username',username);
+  sessionStorage.setItem('chat_username',username);localStorage.setItem('chat_username',username);
   document.getElementById('nameGate').style.display='none';
   if('Notification' in window){
     const p=await Notification.requestPermission();
@@ -210,10 +211,10 @@ setInterval(()=>{if(username&&room){load();}if(username){pollVisitedRooms();}},2
 document.addEventListener('visibilitychange',()=>{if(username){pollVisitedRooms();}});
 (async()=>{
   renderEmojiPanel();
-  visitedRooms=JSON.parse(sessionStorage.getItem('chat_visited_rooms')||'[]');
-  roomLastTs=JSON.parse(sessionStorage.getItem('chat_room_last_ts')||'{}');
-  const u=sessionStorage.getItem('chat_username')||'';
-  const r=sessionStorage.getItem('chat_room')||'';
+  visitedRooms=JSON.parse(localStorage.getItem('chat_visited_rooms')||sessionStorage.getItem('chat_visited_rooms')||'[]');
+  roomLastTs=JSON.parse(localStorage.getItem('chat_room_last_ts')||sessionStorage.getItem('chat_room_last_ts')||'{}');
+  const u=localStorage.getItem('chat_username')||sessionStorage.getItem('chat_username')||'';
+  const r=localStorage.getItem('chat_room')||sessionStorage.getItem('chat_room')||'';
   if('Notification' in window){notificationsEnabled=(Notification.permission==='granted');}
   if(u){
     username=u;

@@ -52,5 +52,6 @@
       <a class="module" href="#"><h3>🖥️ Server Status <small style="color:#1f6fff;">TBA</small></h3><p>Server-Metriken und Health-Checks folgen bald.</p></a>
     </section>
   </div>
+<script src="chat_notifier.js"></script>
 </body>
 </html>

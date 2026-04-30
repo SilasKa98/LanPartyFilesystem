@@ -444,5 +444,6 @@ if(isset($_GET["Pfad0"])){
     document.getElementById("detailCopy").addEventListener("click", function(){ navigator.clipboard.writeText(document.getElementById("detailName").textContent); showToast("Name kopiert"); });
 
 </script>
+<script src="chat_notifier.js"></script>
 </body>
 </html>
