@@ -138,17 +138,16 @@
             const box = document.getElementById('searchResults');
             if(!results.length){ box.innerHTML = '<div class=\"search-node\">Keine Treffer</div>'; box.classList.add('show'); return; }
             box.innerHTML = '';
-            const buildUrlFromRelativePath = (relativePath, type) => {
-                const normalized = String(relativePath || '').replace(/^\/+|\/+$/g, '');
-                const folderPath = type === 'file' ? normalized.split('/').slice(0, -1).join('/') : normalized;
-                if (!folderPath) return 'index.php';
-                const parts = folderPath.split('/').filter(Boolean);
+            const buildUrlFromSegments = (segments) => {
+                const parts = Array.isArray(segments) ? segments.filter(Boolean) : [];
+                if (!parts.length) return 'index.php';
                 return 'index.php?' + parts.map((s, i) => 'Pfad' + i + '=' + encodeURIComponent(s)).join('&');
             };
             results.forEach(item => {
-                const depth = (String(item.relativePath || '').match(/\//g) || []).length;
+                const segments = Array.isArray(item.pathSegments) ? item.pathSegments : [];
+                const depth = Math.max(0, segments.length - 1);
                 const icon = item.type === 'folder' ? '📁' : '📄';
-                const url = buildUrlFromRelativePath(item.relativePath, item.type);
+                const url = buildUrlFromSegments(segments);
                 const node = document.createElement('div');
                 node.className = 'search-node';
                 node.style.paddingLeft = `${8 + depth * 16}px`;

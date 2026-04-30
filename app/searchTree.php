@@ -28,10 +28,15 @@ foreach ($iterator as $item) {
     }
 
     if (strpos($lower($relativePath), $needle) !== false) {
+        $pathSegments = array_values(array_filter(explode(DIRECTORY_SEPARATOR, $relativePath), 'strlen'));
+        if (!$item->isDir() && count($pathSegments) > 0) {
+            array_pop($pathSegments);
+        }
         $results[] = [
             'name' => $item->getFilename(),
             'relativePath' => $relativePath,
-            'type' => $item->isDir() ? 'folder' : 'file'
+            'type' => $item->isDir() ? 'folder' : 'file',
+            'pathSegments' => $pathSegments
         ];
     }
 
