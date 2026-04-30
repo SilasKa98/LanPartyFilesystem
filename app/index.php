@@ -5,29 +5,34 @@
     <title>Lan Cloud</title>
     <style>
         :root {
-            --bg: #0f172a;
-            --panel: #111827;
-            --panel-soft: #1f2937;
-            --border: #334155;
-            --text: #e5e7eb;
-            --muted: #94a3b8;
-            --accent: #22c55e;
-            --accent-soft: #16a34a;
+            --bg: #040a1f;
+            --bg-soft: #07143a;
+            --panel: rgba(8, 20, 52, 0.82);
+            --panel-soft: rgba(15, 36, 78, 0.9);
+            --panel-bright: rgba(20, 58, 122, 0.62);
+            --border: #1a7fd4;
+            --border-soft: rgba(89, 189, 255, 0.45);
+            --text: #e7f4ff;
+            --muted: #8fc8ee;
+            --accent: #1ec7ff;
+            --accent-soft: #1578ff;
+            --warn: #ffd447;
+            --glow: 0 0 0 1px rgba(30, 199, 255, 0.35), 0 0 20px rgba(30, 199, 255, 0.16);
         }
         * { box-sizing: border-box; }
-        body { margin: 0; font-family: Inter, system-ui, Arial, sans-serif; background: radial-gradient(circle at top, #1e293b 0%, var(--bg) 45%); color: var(--text); }
+        body { margin: 0; font-family: "Rajdhani", "Inter", system-ui, Arial, sans-serif; background: radial-gradient(circle at 18% 12%, #0d2f6c 0%, var(--bg-soft) 30%, var(--bg) 65%, #01040f 100%); color: var(--text); min-height:100vh; }
         #content { max-width: 1200px; margin: 0 auto; padding: 24px; }
-        .topbar { display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom: 16px; }
-        h1 { margin:0; font-size: 1.8rem; }
+        .topbar { display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom: 16px; background: linear-gradient(90deg, rgba(7,24,62,.95), rgba(5,16,42,.85)); border: 1px solid var(--border-soft); box-shadow: var(--glow); padding: 14px 16px; border-radius: 14px; }
+        h1 { margin:0; font-size: 1.8rem; text-transform: uppercase; letter-spacing: .06em; text-shadow: 0 0 18px rgba(34, 198, 255, .42); }
         .toolbar { display:flex; gap:10px; align-items:center; }
-        .input, .btn { border:1px solid var(--border); background: var(--panel); color: var(--text); border-radius: 10px; padding: 10px 12px; }
+        .input, .btn { border:1px solid var(--border-soft); background: linear-gradient(180deg, rgba(18, 48, 96, 0.95), rgba(7, 23, 56, 0.95)); color: var(--text); border-radius: 10px; padding: 10px 12px; box-shadow: inset 0 0 12px rgba(31, 112, 183, 0.3); }
         .btn { cursor:pointer; }
-        .btn:hover { border-color: var(--accent); }
-        #uploadWrapper { border: 2px dashed var(--border); border-radius: 16px; background: rgba(17, 24, 39, .9); padding: 24px; text-align: center; margin-bottom: 16px; transition: .2s ease; }
+        .btn:hover { border-color: var(--accent); box-shadow: 0 0 14px rgba(30, 199, 255, 0.35); }
+        #uploadWrapper { border: 2px dashed var(--border-soft); border-radius: 16px; background: linear-gradient(160deg, rgba(6, 20, 55, .95), rgba(9, 29, 72, .75)); padding: 24px; text-align: center; margin-bottom: 16px; transition: .2s ease; box-shadow: var(--glow); }
         #uploadWrapper .helper { color: var(--muted); }
         #uploadFile { width: 100%; height: 48px; opacity: 0; cursor: pointer; position:absolute; inset:0; }
         .uploadInputWrap { position:relative; height: 48px; margin-top: 10px; }
-        .uploadButtonFake { height:48px; border-radius:10px; display:grid; place-items:center; background: var(--panel-soft); border:1px solid var(--border); }
+        .uploadButtonFake { height:48px; border-radius:10px; display:grid; place-items:center; background: var(--panel-soft); border:1px solid var(--border-soft); }
         #breadcrumb { margin: 12px 0; color: var(--muted); }
         #breadcrumb a { color: #c7d2fe; text-decoration:none; }
         .section-title { margin: 18px 0 8px; color: var(--muted); font-size: .95rem; }
@@ -35,24 +40,24 @@
         .grid.list { display:flex; flex-direction:column; }
         .grid.list .card { flex-direction:row; justify-content:flex-start; align-items:center; min-height:64px; gap:12px; }
         .grid.list .name { text-align:left; }
-        .card { background: var(--panel); border:1px solid var(--border); border-radius: 14px; padding: 10px; min-height: 130px; display:flex; flex-direction:column; align-items:center; justify-content:space-between; transition:.2s ease; position:relative; }
-        .card:hover { transform: translateY(-2px); border-color:#64748b; }
+        .card { background: linear-gradient(160deg, var(--panel) 0%, var(--panel-soft) 100%); border:1px solid var(--border-soft); border-radius: 14px; padding: 10px; min-height: 130px; display:flex; flex-direction:column; align-items:center; justify-content:space-between; transition:.2s ease; position:relative; box-shadow: inset 0 0 30px rgba(14, 57, 121, 0.25); }
+        .card:hover { transform: translateY(-2px); border-color:#56d9ff; box-shadow: var(--glow); }
         .card img { width:56px; height:56px; object-fit:contain; }
         .card:focus { outline:2px solid var(--accent); outline-offset:2px; }
         .name { font-size: .85rem; text-align:center; overflow-wrap:anywhere; }
         .folder-card { min-height: 100px; }
-        .dropdown-content { display:none; position:absolute; top:8px; right:8px; background:#0b1220; border:1px solid var(--border); border-radius:8px; overflow:hidden; z-index:2; }
+        .dropdown-content { display:none; position:absolute; top:8px; right:8px; background:#040f2a; border:1px solid var(--border-soft); border-radius:8px; overflow:hidden; z-index:2; }
         .dropdown-content a { display:block; color:var(--text); text-decoration:none; padding:8px 10px; font-size:.85rem; }
         .dropdown-content a:hover { background:#1e293b; }
         .show { display:block; }
         #leftSidebar { position: fixed; right: 24px; bottom: 24px; }
-        #leftSidebar img { width: 54px; height:54px; cursor:pointer; background: var(--accent); border-radius:50%; padding: 12px; box-shadow: 0 8px 20px rgba(0,0,0,.35); }
-        #leftSidebar img:hover { background: var(--accent-soft); }
+        #leftSidebar img { width: 54px; height:54px; cursor:pointer; background: linear-gradient(180deg, var(--accent), var(--accent-soft)); border-radius:50%; padding: 12px; box-shadow: 0 0 18px rgba(30,199,255,.55); }
+        #leftSidebar img:hover { filter: brightness(1.08); }
         .modal { display:none; position:fixed; inset:0; background: rgba(0,0,0,.45); z-index: 9999; }
-        .modal-content { width:min(420px,90%); margin: 15vh auto; background: #f8fafc; color:#0f172a; border-radius: 14px; padding: 16px; }
+        .modal-content { width:min(420px,90%); margin: 15vh auto; background: #e7f4ff; color:#09203f; border-radius: 14px; padding: 16px; border:1px solid #62c7ff; }
         .modal-content input { width:100%; padding:10px; margin-bottom: 10px; }
         #noContent { text-align:center; color:var(--muted); margin-top: 24px; }
-        .toast { position:fixed; left:50%; transform:translateX(-50%); bottom:20px; background:#111827; border:1px solid var(--border); color:var(--text); padding:10px 14px; border-radius:10px; display:none; z-index:10; }
+        .toast { position:fixed; left:50%; transform:translateX(-50%); bottom:20px; background:#07173e; border:1px solid var(--border-soft); color:var(--text); padding:10px 14px; border-radius:10px; display:none; z-index:10; box-shadow: var(--glow); }
     </style>
     <script>
         document.addEventListener('contextmenu', event => event.preventDefault());
@@ -113,7 +118,7 @@
             const isList = btn.getAttribute('aria-pressed') === 'true';
             const newState = !isList;
             btn.setAttribute('aria-pressed', String(newState));
-            btn.innerText = isList ? 'List View' : 'Grid View';
+            btn.innerText = isList ? '☰ List View' : '◫ Grid View';
             localStorage.setItem('lancloud_view_list', newState ? '1' : '0');
         }
         function showToast(msg){
@@ -126,8 +131,8 @@
             const text = document.getElementById('currentPathText').innerText;
             navigator.clipboard.writeText(text);
             showToast('Pfad kopiert');
-            document.getElementById('copyPathBtn').innerText = 'Copied!';
-            setTimeout(()=>document.getElementById('copyPathBtn').innerText='Copy Path',1200);
+            document.getElementById('copyPathBtn').innerText = '✓ Kopiert';
+            setTimeout(()=>document.getElementById('copyPathBtn').innerText='⎘ Pfad kopieren',1200);
         }
     </script>
 </head>
@@ -147,7 +152,7 @@ if(isset($_GET["Pfad0"])){
 <div id='leftSidebar'><img src='../media/folder-plus.svg' id="myBtn"></div>
 <div id="myModal" class="modal"><div class="modal-content"><span class="close" style="float:right;cursor:pointer;">&times;</span><p>Neuer Ordner</p><form action="createFolder.php" method='post'><input type="text" pattern="[^|,/:?*\\]+" value="unbenannter Ordner" name="folderName" required><input type="hidden" name="path" value="<?php echo $path; ?>"><input type="hidden" value="<?php echo $_SERVER['REQUEST_URI']; ?>" name="currentUrl"><button class="btn" type="submit">Erstellen</button><button class="btn" id="cancelNewFolder" type="button">Abbrechen</button></form></div></div>
 <div id="content">
-    <div class="topbar"><h1>Lan Cloud</h1><div class="toolbar"><button class="btn" onclick="history.back()">← Zurück</button><input id="searchInput" class="input" placeholder="Search files/folders" oninput="filterEntriesDebounced()"><select id="sortSelect" class="input" onchange="sortEntries()"><option value="nameAsc">Name A-Z</option><option value="nameDesc">Name Z-A</option></select><button id="viewToggle" class="btn" onclick="toggleView()" aria-pressed="false">List View</button><button id="copyPathBtn" class="btn" onclick="copyCurrentPath()">Copy Path</button></div></div>
+    <div class="topbar"><h1>◉ Lan Cloud Matrix</h1><div class="toolbar"><button class="btn" onclick="history.back()">⟵ Zurück</button><input id="searchInput" class="input" placeholder="Dateien/Ordner suchen" oninput="filterEntriesDebounced()"><select id="sortSelect" class="input" onchange="sortEntries()"><option value="nameAsc">Name A-Z</option><option value="nameDesc">Name Z-A</option></select><button id="viewToggle" class="btn" onclick="toggleView()" aria-pressed="false">☰ List View</button><button id="copyPathBtn" class="btn" onclick="copyCurrentPath()">⎘ Pfad kopieren</button></div></div>
     <div id="uploadWrapper"><div class="helper">Drag & drop files here or click to browse.</div><div id="uploadStatus" class="helper"></div><form method="post" action="uploadFiles.php" enctype="multipart/form-data"><div class="uploadInputWrap"><div class="uploadButtonFake">Choose files</div><input id="uploadFile" type="file" onchange="changeText(this);" name="files[]" multiple></div><input type="hidden" value="<?php echo $path; ?>" name="path"><input type="hidden" value="<?php echo $_SERVER['REQUEST_URI']; ?>" name="currentUrl"></form></div>
 
     <div id="breadcrumb"><span id="currentPathText"><?php
@@ -270,7 +275,7 @@ if(isset($_GET["Pfad0"])){
             document.querySelectorAll(".grid").forEach(g => g.classList.add("list"));
             const btn=document.getElementById("viewToggle");
             btn.setAttribute("aria-pressed","true");
-            btn.innerText="Grid View";
+            btn.innerText="◫ Grid View";
         }
     });
 </script>
