@@ -22,15 +22,15 @@
         * { box-sizing: border-box; }
         body { margin: 0; font-family: "Inter", "Segoe UI", system-ui, Arial, sans-serif; background: var(--bg); color: var(--text); min-height:100vh; line-height:1.45; }
         #content { max-width: 1200px; margin: 0 auto; padding: 24px; }
-         .app-shell{display:grid;grid-template-columns:300px 1fr 340px;min-height:100vh;} .sidebar{background:#fff;border-right:1px solid #e2e9f7;padding:22px;} .side-link{display:block;padding:12px 14px;border-radius:10px;color:#2e4468;text-decoration:none;font-weight:600;margin:4px 0;} .side-link.active{background:#edf3ff;color:#1f6fff;} .rightpanel{background:#fff;border-left:1px solid #e2e9f7;padding:20px;} .stats{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:12px;margin:12px 0 16px;} .stat{background:#fff;border:1px solid #e2e9f7;border-radius:14px;padding:14px;} .topbar { display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom: 16px; background: linear-gradient(90deg, rgba(7,24,62,.95), rgba(5,16,42,.85)); border: 1px solid var(--border-soft); box-shadow: var(--glow); padding: 14px 16px; border-radius: 14px; }
+         .app-shell{display:grid;grid-template-columns:300px 1fr 340px;min-height:100vh;} .sidebar{background:#fff;border-right:1px solid #e2e9f7;padding:22px;} .side-link{display:block;padding:12px 14px;border-radius:10px;color:#2e4468;text-decoration:none;font-weight:600;margin:4px 0;} .side-link.active{background:#edf3ff;color:#1f6fff;} .rightpanel{background:#fff;border-left:1px solid #e2e9f7;padding:20px;} .detail-card{border:1px solid #e3ebfb;border-radius:16px;padding:16px;position:sticky;top:20px} .meta-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #edf2fc;font-size:.93rem;} .meta-row:last-child{border-bottom:0;} .quick-actions{display:grid;gap:8px;margin-top:14px;} .quick-actions .btn.primary{background:#1f6fff;color:#fff;border-color:#1f6fff;} .stats{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:12px;margin:12px 0 16px;} .stat{background:#fff;border:1px solid #e2e9f7;border-radius:14px;padding:14px;} .topbar { display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom: 16px; background: #fff; border: 1px solid #e2e9f7; padding: 14px 16px; border-radius: 14px; }
         .brand { display:flex; align-items:center; gap:10px; }
         .brand-logo { width:44px; height:44px; border-radius:10px; background:rgba(11,41,84,.75); padding:4px; object-fit:contain; box-shadow: inset 0 0 16px rgba(30,199,255,.25); }
         h1 { margin:0; font-size: 1.5rem; letter-spacing: .01em; text-shadow: 0 0 10px rgba(34, 198, 255, .28); font-weight:700; }
         .toolbar { display:flex; gap:10px; align-items:center; }
-        .input, .btn { border:1px solid var(--border-soft); background: linear-gradient(180deg, rgba(18, 48, 96, 0.95), rgba(7, 23, 56, 0.95)); color: #eef8ff; border-radius: 10px; padding: 10px 12px; box-shadow: inset 0 0 12px rgba(31, 112, 183, 0.3); font-size:.95rem; font-weight:600; }
+        .input, .btn { border:1px solid #d9e4fa; background:#fff; color:#1b3763; border-radius: 10px; padding: 10px 12px; font-size:.95rem; font-weight:600; }
         .input::placeholder { color:#c6e7ff; opacity:.95; }
         .btn { cursor:pointer; }
-        .btn:hover { border-color: var(--accent); box-shadow: 0 0 14px rgba(30, 199, 255, 0.35); }
+        .btn:hover { border-color: var(--accent); }
         #uploadWrapper { border: 1px dashed #cddaf5; border-radius: 16px; background: #fff; padding: 24px; text-align: center; margin-bottom: 16px; transition: .2s ease; box-shadow: var(--glow); }
         #uploadWrapper .helper { color: var(--muted); }
         #uploadFile { width: 100%; height: 48px; opacity: 0; cursor: pointer; position:absolute; inset:0; }
@@ -193,7 +193,15 @@
             document.getElementById('copyPathBtn').innerText = '✓ Kopiert';
             setTimeout(()=>document.getElementById('copyPathBtn').innerText='⎘ Pfad kopieren',1200);
         }
-    </script>
+    
+    function updateDetailsPanelForDirectory(){
+        document.getElementById("detailName").textContent = "Aktuelles Verzeichnis";
+        document.getElementById("detailSubtitle").textContent = document.getElementById("currentPathText").innerText;
+        document.getElementById("detailDownload").setAttribute("href", "#");
+    }
+    document.getElementById("detailCopy").addEventListener("click", function(){ navigator.clipboard.writeText(document.getElementById("detailPath").textContent); showToast("Link/Pfad kopiert"); });
+
+</script>
 </head>
 <body ondragover="highlightField();" ondragleave="normalizeField();">
 <?php
@@ -209,8 +217,8 @@ if(isset($_GET["Pfad0"])){
 }
 ?>
 <div id="myModal" class="modal"><div class="modal-content"><span class="close" style="float:right;cursor:pointer;">&times;</span><p>Neuer Ordner</p><form action="createFolder.php" method='post'><input type="text" pattern="[^|,/:?*\\]+" value="unbenannter Ordner" name="folderName" required><input type="hidden" name="path" value="<?php echo $path; ?>"><input type="hidden" value="<?php echo $_SERVER['REQUEST_URI']; ?>" name="currentUrl"><button class="btn" type="submit">Erstellen</button><button class="btn" id="cancelNewFolder" type="button">Abbrechen</button></form></div></div>
-<div class="app-shell"><aside class="sidebar"><div class="brand" style="margin-bottom:18px;"><img src="../media/folder-open.svg" class="brand-logo" alt="LocalLoot Logo"><div><h1 style="font-size:2.1rem;">LocalLoot</h1><div style="color:#6d7f9d;">Local file & game sharing for LAN parties</div></div></div><div style="color:#7e8eaa;font-size:.85rem;margin:12px 0;">QUICK ACCESS</div><a class="side-link" href="index.php">Dashboard</a><a class="side-link active" href="file-browser.php">Shared Files</a><a class="side-link" href="#">Game Library</a><a class="side-link" href="#">Chat</a><a class="side-link" href="#">Server Status</a></aside><main><div id="content">
-    <div class="topbar"><div class="brand"><img src="../media/folder-open.svg" class="brand-logo" alt="LocalLoot Logo"><h1>LocalLoot</h1></div><div class="toolbar"><button class="btn" onclick="history.back()">← Dashboard</button><div class="search-wrap"><input id="searchInput" class="input" placeholder="Dateien/Ordner global suchen" oninput="filterEntriesDebounced();searchAllPaths()"><div id="searchResults" class="search-results"></div></div><select id="sortSelect" class="input" onchange="sortEntries()"><option value="nameAsc">Name A-Z</option><option value="nameDesc">Name Z-A</option></select><button id="viewToggle" class="btn" onclick="toggleView()" aria-pressed="false">☰ List View</button><button id="myBtn" class="btn" type="button">+ New Folder</button><button id="copyPathBtn" class="btn" onclick="copyCurrentPath()">⎘ Pfad kopieren</button></div></div>
+<div class="app-shell"><aside class="sidebar"><div class="brand" style="margin-bottom:18px;"><img src="../media/folder-open.svg" class="brand-logo" alt="LocalLoot Logo"><div><h1 style="font-size:2.1rem;">LocalLoot</h1><div style="color:#6d7f9d;">Local file & game sharing for LAN parties</div></div></div><div style="color:#7e8eaa;font-size:.85rem;margin:12px 0;">QUICK ACCESS</div><a class="side-link" href="index.php">Dashboard</a><a class="side-link active" href="file-browser.php">Shared Files</a><a class="side-link" href="#">Game Library</a><a class="side-link" href="#">Chat</a><a class="side-link" href="#">Server Status</a><div style="margin-top:16px;color:#7e8eaa;font-size:.85rem;">MODULES</div><a class="side-link active" href="file-browser.php">📁 Files</a><a class="side-link" href="#">🎮 Game Library</a><a class="side-link" href="#">💬 Chat</a></aside><main><div id="content">
+    <div class="topbar"><div class="toolbar"><button class="btn" onclick="history.back()">← Dashboard</button><div class="search-wrap"><input id="searchInput" class="input" placeholder="Dateien/Ordner global suchen" oninput="filterEntriesDebounced();searchAllPaths()"><div id="searchResults" class="search-results"></div></div><select id="sortSelect" class="input" onchange="sortEntries()"><option value="nameAsc">Name A-Z</option><option value="nameDesc">Name Z-A</option></select><button id="viewToggle" class="btn" onclick="toggleView()" aria-pressed="false">☰ List View</button><button id="myBtn" class="btn" type="button">+ New Folder</button><button id="copyPathBtn" class="btn" onclick="copyCurrentPath()">⎘ Pfad kopieren</button></div></div>
     <div id="uploadWrapper"><div class="helper">Drag & drop files here or click to browse.</div><div id="uploadStatus" class="helper"></div><form method="post" action="uploadFiles.php" enctype="multipart/form-data"><div class="uploadInputWrap"><div class="uploadButtonFake">Choose files</div><input id="uploadFile" type="file" onchange="changeText(this);" name="files[]" multiple></div><input type="hidden" value="<?php echo $path; ?>" name="path"><input type="hidden" value="<?php echo $_SERVER['REQUEST_URI']; ?>" name="currentUrl"></form></div>
 
     <div id="breadcrumb"><span id="currentPathText"><?php
@@ -271,7 +279,7 @@ if(isset($_GET["Pfad0"])){
     }
     print "</div>";
     ?>
-</div></main><aside class="rightpanel"><h3 style="margin-top:0;">File Details</h3><p style="color:#6c7d98;">Wähle eine Datei für Detailinfos und schnelle Aktionen.</p><div style="display:grid;gap:10px;"><a class="btn" href="#">Download</a><a class="btn" href="#">Copy Link</a></div></aside></div>
+</div></main><aside class="rightpanel"><div class="detail-card"><div style="font-size:.85rem;color:#7e8eaa;margin-bottom:8px;">DETAILS</div><h3 id="detailName" style="margin:0 0 8px;">Aktuelles Verzeichnis</h3><p id="detailSubtitle" style="margin:0 0 12px;color:#6c7d98;"><?php echo htmlspecialchars($currentDisplayPath, ENT_QUOTES); ?></p><div class="meta-row"><span>Ordner</span><strong id="detailFolders"><?php echo $folderCount; ?></strong></div><div class="meta-row"><span>Dateien</span><strong id="detailFiles"><?php echo $fileCount; ?></strong></div><div class="meta-row"><span>Pfad</span><span id="detailPath"><?php echo htmlspecialchars($path, ENT_QUOTES); ?></span></div><div class="quick-actions"><a id="detailDownload" class="btn primary" href="#">Download</a><button class="btn" type="button" id="detailCopy">Copy Link</button><button class="btn" type="button">Add to Favorites</button></div></div></aside></div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <div id="previewModal" class="modal"><div class="modal-content"><span class="close" id="closePreview" style="float:right;cursor:pointer;">&times;</span><div id="previewBody"></div><div id="previewActions" style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;"></div></div></div>
 <script>
@@ -302,6 +310,9 @@ if(isset($_GET["Pfad0"])){
         }
     }
     function previewFile(fileName, filePath, downloadPath){
+        document.getElementById("detailName").textContent = fileName;
+        document.getElementById("detailSubtitle").textContent = "Datei ausgewählt";
+        document.getElementById("detailDownload").setAttribute("href", downloadPath);
         const modal = document.getElementById("previewModal");
         const body = document.getElementById("previewBody");
         const actions = document.getElementById("previewActions");
@@ -348,6 +359,7 @@ if(isset($_GET["Pfad0"])){
         if(event.target === this){ this.style.display = "none"; }
     });
     document.addEventListener("DOMContentLoaded", function(){
+        updateDetailsPanelForDirectory();
         preventBrowserDropNavigation();
         setupDropUpload();
         if(localStorage.getItem("lancloud_view_list") === "1"){
@@ -404,6 +416,14 @@ if(isset($_GET["Pfad0"])){
             window.location.href = node.dataset.url;
         });
     });
+
+    function updateDetailsPanelForDirectory(){
+        document.getElementById("detailName").textContent = "Aktuelles Verzeichnis";
+        document.getElementById("detailSubtitle").textContent = document.getElementById("currentPathText").innerText;
+        document.getElementById("detailDownload").setAttribute("href", "#");
+    }
+    document.getElementById("detailCopy").addEventListener("click", function(){ navigator.clipboard.writeText(document.getElementById("detailPath").textContent); showToast("Link/Pfad kopiert"); });
+
 </script>
 </body>
 </html>
