@@ -3,15 +3,20 @@
   window.__chatNotifierInitialized = true;
 
   const POLL_MS = 3500;
-  const audio = new Audio('data:audio/wav;base64,UklGRlQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YTAAAAAAAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA');
-  audio.preload = 'auto';
+  let audioCtx = null;
   let unlocked = false;
 
   function unlockAudio(){
     if (unlocked) return;
-    audio.volume = 0;
-    const p = audio.play();
-    if (p && p.then) p.then(()=>{audio.pause(); audio.currentTime=0; audio.volume=1; unlocked=true;}).catch(()=>{});
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.connect(g); g.connect(audioCtx.destination);
+      g.gain.value = 0;
+      o.start(); o.stop(audioCtx.currentTime + 0.01);
+      unlocked = true;
+    } catch (_) {}
   }
 
   async function fetchLatest(room){
@@ -26,9 +31,18 @@
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification(`Neues im Chat ${room}`, { body: text });
     }
-    audio.currentTime = 0;
-    const p = audio.play();
-    if (p && p.catch) p.catch(()=>{});
+    try {
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = 'sine'; o.frequency.value = 740;
+      o.connect(g); g.connect(audioCtx.destination);
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.exponentialRampToValueAtTime(0.15, now + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 0.30);
+      o.start(now); o.stop(now + 0.31);
+    } catch (_) {}
   }
 
   async function tick(){

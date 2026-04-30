@@ -43,7 +43,7 @@
     <aside class="panel">
       <h3 style="margin:4px 0 8px">Chats</h3>
       <div class="row" style="align-items:center;justify-content:space-between;margin-bottom:8px"><p class="muted" style="margin:0">Hallo <strong id="userLabel">-</strong></p><button id="editNameBtn" type="button" class="secondary">Name ändern</button></div>
-      <div class="row"><input id="newRoomInput" maxlength="60" placeholder="Neuen Chat-Namen" style="flex:1"><button id="createRoomBtn" type="button">Starten</button></div>
+      <div class="row"><input id="newRoomInput" maxlength="60" placeholder="Neuen Chat-Namen" style="flex:1"><button id="createRoomBtn" type="button">Starten</button></div><div class="row" style="margin-top:8px"><label class="muted" style="display:flex;align-items:center;gap:8px"><input id="protectToggle" type="checkbox"> Passwortschutz</label><input id="newRoomPassword" type="password" maxlength="120" placeholder="Passwort für neuen Chat" style="flex:1;display:none"></div>
       <div id="rooms" class="rooms"></div>
     </aside>
 
@@ -73,11 +73,12 @@ let visitedRooms=[];
 let roomLastTs={};
 let notificationsEnabled=false;
 let audioUnlocked=false;
+let roomPasswords={};
 
 function fmt(ts){return new Date(ts*1000).toLocaleString('de-DE');}
 function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function renderEmojiPanel(){const p=document.getElementById('emojiPanel');p.innerHTML='';emojiList.forEach(e=>{const b=document.createElement('button');b.type='button';b.className='emoji';b.textContent=e;b.onclick=()=>{const t=document.getElementById('text');t.value+=e;t.focus();};p.appendChild(b);});}
-function persistState(){sessionStorage.setItem('chat_visited_rooms',JSON.stringify(visitedRooms));sessionStorage.setItem('chat_room_last_ts',JSON.stringify(roomLastTs));localStorage.setItem('chat_visited_rooms',JSON.stringify(visitedRooms));localStorage.setItem('chat_room_last_ts',JSON.stringify(roomLastTs));}
+function persistState(){sessionStorage.setItem('chat_visited_rooms',JSON.stringify(visitedRooms));sessionStorage.setItem('chat_room_last_ts',JSON.stringify(roomLastTs));sessionStorage.setItem('chat_room_passwords',JSON.stringify(roomPasswords));localStorage.setItem('chat_visited_rooms',JSON.stringify(visitedRooms));localStorage.setItem('chat_room_last_ts',JSON.stringify(roomLastTs));localStorage.setItem('chat_room_passwords',JSON.stringify(roomPasswords));}
 function markRoomVisited(name){if(!visitedRooms.includes(name)){visitedRooms.push(name);}persistState();}
 function playNotificationTone(){
   const audio=document.getElementById('notifAudio');
@@ -99,11 +100,12 @@ async function loadRooms(){
   const rooms=d.rooms||[];
   roomsEl.innerHTML='';
   if(!rooms.length){roomsEl.innerHTML='<div class="muted">Noch keine Chats vorhanden.</div>';return;}
-  rooms.forEach(name=>{const b=document.createElement('button');b.type='button';b.className='roomBtn'+(name===room?' active':'');b.textContent=name;b.onclick=()=>openChat(name);roomsEl.appendChild(b);});
+  rooms.forEach(item=>{const name=item.name||'';const isProtected=!!item.protected;const b=document.createElement('button');b.type='button';b.className='roomBtn'+(name===room?' active':'');b.textContent=(isProtected?'🔒 ':'')+name;b.onclick=()=>openChat(name,isProtected);roomsEl.appendChild(b);});
 }
 
 async function fetchLatestTs(roomName){
-  const r=await fetch('chat_api.php?action=list&room='+encodeURIComponent(roomName));
+  const pw=roomPasswords[roomName]||'';
+  const r=await fetch('chat_api.php?action=list&room='+encodeURIComponent(roomName)+'&password='+encodeURIComponent(pw));
   const d=await r.json();
   const messages=d.messages||[];
   if(!messages.length){return null;}
@@ -112,7 +114,8 @@ async function fetchLatestTs(roomName){
 
 async function load(){
   if(!room){return;}
-  const r=await fetch('chat_api.php?action=list&room='+encodeURIComponent(room));
+  const pw=roomPasswords[room]||'';
+  const r=await fetch('chat_api.php?action=list&room='+encodeURIComponent(room)+'&password='+encodeURIComponent(pw));
   const d=await r.json();
   const messages=d.messages||[];
   box.innerHTML=messages.map(m=>`<div class="m"><div class="meta"><strong>${esc(m.user)}</strong> • ${fmt(m.ts)}</div><div>${esc(m.text)}</div></div>`).join('') || '<div class="muted">Noch keine Nachrichten.</div>';
@@ -123,8 +126,17 @@ async function load(){
   await loadRooms();
 }
 
-async function openChat(chosenRoom){
+async function openChat(chosenRoom,isProtected=false){
   if(!username||!chosenRoom){return;}
+  if(isProtected){
+    const existing=roomPasswords[chosenRoom]||'';
+    const entered=existing || prompt('Passwort für Chat '+chosenRoom+' eingeben:') || '';
+    if(!entered){return;}
+    const check=await fetch('chat_api.php?action=checkRoomAccess&room='+encodeURIComponent(chosenRoom)+'&password='+encodeURIComponent(entered));
+    if(!check.ok){alert('Falsches Passwort.');return;}
+    roomPasswords[chosenRoom]=entered;
+    persistState();
+  }
   room=chosenRoom;
   sessionStorage.setItem('chat_room',room);localStorage.setItem('chat_room',room);
   markRoomVisited(room);
@@ -180,7 +192,9 @@ document.getElementById('editNameBtn').onclick=()=>{
 document.getElementById('createRoomBtn').onclick=async()=>{
   const rname=document.getElementById('newRoomInput').value.trim();
   if(!rname||!username){return;}
-  await fetch('chat_api.php?action=createRoom&room='+encodeURIComponent(rname));
+  const protect=document.getElementById('protectToggle').checked;
+  const newPw=document.getElementById('newRoomPassword').value.trim();
+  await fetch('chat_api.php?action=createRoom&room='+encodeURIComponent(rname)+'&protect='+(protect?'1':'0')+'&newPassword='+encodeURIComponent(newPw));
   document.getElementById('newRoomInput').value='';
   await loadRooms();
   openChat(rname);
@@ -191,7 +205,8 @@ document.getElementById('chatForm').onsubmit=async(e)=>{
   if(!username||!room){return;}
   const t=document.getElementById('text'); const text=t.value.trim();
   if(!text){return;}
-  await fetch('chat_api.php?action=send&room='+encodeURIComponent(room),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user:username,text})});
+  const pw=roomPasswords[room]||'';
+  await fetch('chat_api.php?action=send&room='+encodeURIComponent(room)+'&password='+encodeURIComponent(pw),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user:username,text})});
   t.value='';
   load();
 };
@@ -213,6 +228,7 @@ document.addEventListener('visibilitychange',()=>{if(username){pollVisitedRooms(
   renderEmojiPanel();
   visitedRooms=JSON.parse(localStorage.getItem('chat_visited_rooms')||sessionStorage.getItem('chat_visited_rooms')||'[]');
   roomLastTs=JSON.parse(localStorage.getItem('chat_room_last_ts')||sessionStorage.getItem('chat_room_last_ts')||'{}');
+  roomPasswords=JSON.parse(localStorage.getItem('chat_room_passwords')||sessionStorage.getItem('chat_room_passwords')||'{}');
   const u=localStorage.getItem('chat_username')||sessionStorage.getItem('chat_username')||'';
   const r=localStorage.getItem('chat_room')||sessionStorage.getItem('chat_room')||'';
   if('Notification' in window){notificationsEnabled=(Notification.permission==='granted');}
@@ -225,5 +241,6 @@ document.addEventListener('visibilitychange',()=>{if(username){pollVisitedRooms(
     if(r){openChat(r);} 
   }
 })();
+document.getElementById('protectToggle').addEventListener('change',(e)=>{document.getElementById('newRoomPassword').style.display=e.target.checked?'block':'none';});
 </script>
 </body></html>
