@@ -29,7 +29,7 @@
         .toolbar { display:flex; gap:10px; align-items:center; }
         .input, .btn { border:1px solid #d9e4fa; background:#fff; color:#1b3763; border-radius: 10px; padding: 10px 12px; font-size:.95rem; font-weight:600; }
         .input::placeholder { color:#c6e7ff; opacity:.95; }
-        .btn { cursor:pointer; }
+        .btn { cursor:pointer; text-align:center; display:inline-flex; align-items:center; justify-content:center; }
         .btn:hover { border-color: var(--accent); }
         #uploadWrapper { border: 1px dashed #cddaf5; border-radius: 16px; background: #fff; padding: 24px; text-align: center; margin-bottom: 16px; transition: .2s ease; box-shadow: var(--glow); }
         #uploadWrapper .helper { color: var(--muted); }
@@ -37,11 +37,11 @@
         .uploadInputWrap { position:relative; height: 48px; margin-top: 10px; }
         .uploadButtonFake { height:48px; border-radius:10px; display:grid; place-items:center; background: var(--panel-soft); border:1px solid var(--border-soft); }
         #breadcrumb { margin: 12px 0; color: var(--muted); }
-        #breadcrumb a { color: #c7d2fe; text-decoration:none; }
+        #breadcrumb a { color:#1b4f9f; text-decoration:none; font-weight:600; }
         #breadcrumb.drag-active { padding: 10px 12px; border: 1px dashed var(--border-soft); border-radius: 10px; background: rgba(10, 32, 70, 0.55); animation: breadcrumbPulse .9s ease-in-out infinite alternate; }
         #breadcrumb.drag-active .crumb-dropzone { display: inline-flex; }
-        .crumb-dropzone { display:none; align-items:center; margin-left: 8px; padding: 4px 8px; border-radius: 8px; border:1px solid rgba(97,228,255,.4); color:#d8f3ff; font-size:.82rem; }
-        .crumb-target { padding: 2px 4px; border-radius:6px; transition: .18s ease; }
+        .crumb-dropzone { display:none; align-items:center; margin-left: 8px; padding: 4px 8px; border-radius: 8px; border:1px solid #b7d5ff; color:#355784; font-size:.82rem; background:#f2f7ff; }
+        .crumb-target { padding: 2px 4px; border-radius:6px; transition: .18s ease; color:#1b4f9f; }
         .crumb-target.drag-over { background: rgba(97,228,255,.2); box-shadow: 0 0 0 1px rgba(97,228,255,.4); }
         @keyframes breadcrumbPulse { from { box-shadow: 0 0 0 rgba(97,228,255,.1); } to { box-shadow: 0 0 16px rgba(97,228,255,.28); } }
         .section-title { margin: 18px 0 8px; color: #4b607f; font-size: 1rem; font-weight:700; letter-spacing:.02em; }
@@ -56,7 +56,9 @@
         .name { font-size: .95rem; text-align:center; overflow-wrap:anywhere; font-weight:600; color:#1a2f53; text-shadow: 0 0 6px rgba(10, 39, 78, .45); }
         .folder-card { min-height: 100px; }
         .folder-card.drag-over { border-color: #61e4ff; box-shadow: 0 0 0 2px rgba(97,228,255,.35), 0 0 22px rgba(30,199,255,.35); }
-        .dropdown-content { display:none; position:absolute; top:8px; right:8px; background:#040f2a; border:1px solid var(--border-soft); border-radius:8px; overflow:hidden; z-index:2; }
+        .dropdown-content { display:none; position:absolute; top:34px; right:8px; background:#040f2a; border:1px solid var(--border-soft); border-radius:8px; overflow:hidden; z-index:2; }
+        .card-menu-btn { position:absolute; top:8px; right:8px; width:28px; height:28px; border-radius:8px; border:1px solid #d9e4fa; background:#fff; color:#36527c; font-weight:700; cursor:pointer; display:grid; place-items:center; }
+        .card-menu-btn:hover { border-color:#1f6fff; color:#1f6fff; }
         .dropdown-content a { display:block; color:#071326; text-decoration:none; padding:8px 10px; font-size:.85rem; background:#d9efff; }
         .dropdown-content a:hover { background:#bfe5ff; }
         .show { display:block; }
@@ -227,7 +229,7 @@ if(isset($_GET["Pfad0"])){
                 $pfadName = "Pfad".$i;
                 if($i <= 0){ print "<a class='crumb-target' data-path='".htmlspecialchars($absRoot, ENT_QUOTES)."' href='file-browser.php'>mainStorage</a>"; }
                 $navPath .= "/".$_GET[$pfadName];
-                print " → <a class='crumb-target' data-path='".htmlspecialchars($navPath, ENT_QUOTES)."' href='".$pathBack."'>".$_GET[$pfadName]."</a>";
+                print " / <a class='crumb-target' data-path='".htmlspecialchars($navPath, ENT_QUOTES)."' href='".$pathBack."'>".$_GET[$pfadName]."</a>";
             }
         }else{ print "<span class='crumb-target' data-path='".htmlspecialchars(realpath($path), ENT_QUOTES)."'>".$path."</span>"; }
     ?></span><span class="crumb-dropzone">⬆ Datei auf Breadcrumb ziehen, um Ebene nach oben zu verschieben</span></div>
@@ -244,7 +246,8 @@ if(isset($_GET["Pfad0"])){
     print "<p class='section-title'>Folders</p><div class='grid'>";
     foreach($scanned_directory as $entry){
         if(strpos($entry, ".") === false){
-            echo "<div class='card folder-card' tabindex='0' role='link' aria-label='Ordner ".$entry."' data-folder-name=\"".htmlspecialchars($entry, ENT_QUOTES)."\" data-href='".$_SERVER['REQUEST_URI'].($cntPath == 0 ? "?" : "&")."Pfad".$cntPath."=".$entry."' data-name='".$entry."' oncontextmenu='openDropdownFolder(this)' onclick='openFolderCard(event, this)' onkeydown='openFolderCardByKey(event, this)'>";
+            echo "<div class='card folder-card' tabindex='0' role='link' aria-label='Ordner ".$entry."' data-folder-name=\"".htmlspecialchars($entry, ENT_QUOTES)."\" data-href='".$_SERVER['REQUEST_URI'].($cntPath == 0 ? "?" : "&")."Pfad".$cntPath."=".$entry."' data-name='".$entry."' onclick='openFolderCard(event, this)' onkeydown='openFolderCardByKey(event, this)'>";
+            echo "<button type='button' class='card-menu-btn' aria-label='Ordner-Menü' onclick='toggleCardMenu(event, this)'>⋯</button>";
             echo "<img loading='lazy' src='../media/folder-open.svg' alt='Folder'>";
             echo '<div class="dropdown-content">';
             echo '<a href="downloadFolder.php?path='.urlencode($path).'&folder='.urlencode($entry).'">Download ZIP</a>';
@@ -271,7 +274,7 @@ if(isset($_GET["Pfad0"])){
             if($fileType === ''){ $fileType = 'DATEI'; }
             $fileSizeBytes = @filesize($path.'/'.$entry);
             $fileSizeLabel = $fileSizeBytes !== false ? round($fileSizeBytes / 1024 / 1024, 2).' MB' : 'Unbekannt';
-            echo "<div class='card' tabindex='0' role='button' aria-label='Datei ".$entry."' data-file-name=\"".htmlspecialchars($entry, ENT_QUOTES)."\" data-name='".$entry."' data-file-type='".htmlspecialchars($fileType, ENT_QUOTES)."' data-file-size='".htmlspecialchars($fileSizeLabel, ENT_QUOTES)."' oncontextmenu='openDropdown(this)' onclick='previewFile(\"".$entry."\", \"".$media."\", \"".$path."/".$entry."\", \"".$fileType."\", \"".$fileSizeLabel."\")'><img loading='lazy' src='".$media."' alt='File icon'>";
+            echo "<div class='card' tabindex='0' role='button' aria-label='Datei ".$entry."' data-file-name=\"".htmlspecialchars($entry, ENT_QUOTES)."\" data-name='".$entry."' data-file-type='".htmlspecialchars($fileType, ENT_QUOTES)."' data-file-size='".htmlspecialchars($fileSizeLabel, ENT_QUOTES)."' onclick='previewFile(\"".$entry."\", \"".$media."\", \"".$path."/".$entry."\", \"".$fileType."\", \"".$fileSizeLabel."\")'><button type='button' class='card-menu-btn' aria-label='Datei-Menü' onclick='toggleCardMenu(event, this)'>⋯</button><img loading='lazy' src='".$media."' alt='File icon'>";
             echo '<div class="dropdown-content">';
             echo '<a href="'.$path.'/'.$entry.'" download>Download</a>';
             echo '<form action="deleteFile.php" method="post" style="margin:0;">';
@@ -298,8 +301,15 @@ if(isset($_GET["Pfad0"])){
             document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
         }
     });
-    function openDropdown(x) { const m=x.querySelector('.dropdown-content'); if(m) m.classList.toggle('show'); }
-    function openDropdownFolder(x) { const m=x.querySelector('.dropdown-content'); if(m) m.classList.toggle('show'); }
+    function toggleCardMenu(event, btn) {
+        event.preventDefault();
+        event.stopPropagation();
+        const card = btn.closest('.card');
+        if (!card) return;
+        const menu = card.querySelector('.dropdown-content');
+        document.querySelectorAll('.dropdown-content').forEach(d => { if (d !== menu) d.classList.remove('show'); });
+        if (menu) menu.classList.toggle('show');
+    }
     function openFolderCard(event, el){
         if (event.target.closest('.dropdown-content')) return;
         window.location.href = el.dataset.href;
