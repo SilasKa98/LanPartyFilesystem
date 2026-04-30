@@ -20,12 +20,13 @@
             --glow: 0 0 0 1px rgba(30, 199, 255, 0.35), 0 0 20px rgba(30, 199, 255, 0.16);
         }
         * { box-sizing: border-box; }
-        body { margin: 0; font-family: "Rajdhani", "Inter", system-ui, Arial, sans-serif; background: radial-gradient(circle at 18% 12%, #0d2f6c 0%, var(--bg-soft) 30%, var(--bg) 65%, #01040f 100%); color: var(--text); min-height:100vh; }
+        body { margin: 0; font-family: "Inter", "Segoe UI", system-ui, Arial, sans-serif; background: radial-gradient(circle at 18% 12%, #0d2f6c 0%, var(--bg-soft) 30%, var(--bg) 65%, #01040f 100%); color: var(--text); min-height:100vh; line-height:1.45; }
         #content { max-width: 1200px; margin: 0 auto; padding: 24px; }
         .topbar { display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom: 16px; background: linear-gradient(90deg, rgba(7,24,62,.95), rgba(5,16,42,.85)); border: 1px solid var(--border-soft); box-shadow: var(--glow); padding: 14px 16px; border-radius: 14px; }
-        h1 { margin:0; font-size: 1.8rem; text-transform: uppercase; letter-spacing: .06em; text-shadow: 0 0 18px rgba(34, 198, 255, .42); }
+        h1 { margin:0; font-size: 1.65rem; text-transform: uppercase; letter-spacing: .04em; text-shadow: 0 0 10px rgba(34, 198, 255, .28); font-weight:700; }
         .toolbar { display:flex; gap:10px; align-items:center; }
-        .input, .btn { border:1px solid var(--border-soft); background: linear-gradient(180deg, rgba(18, 48, 96, 0.95), rgba(7, 23, 56, 0.95)); color: var(--text); border-radius: 10px; padding: 10px 12px; box-shadow: inset 0 0 12px rgba(31, 112, 183, 0.3); }
+        .input, .btn { border:1px solid var(--border-soft); background: linear-gradient(180deg, rgba(18, 48, 96, 0.95), rgba(7, 23, 56, 0.95)); color: #eef8ff; border-radius: 10px; padding: 10px 12px; box-shadow: inset 0 0 12px rgba(31, 112, 183, 0.3); font-size:.95rem; font-weight:600; }
+        .input::placeholder { color:#c6e7ff; opacity:.95; }
         .btn { cursor:pointer; }
         .btn:hover { border-color: var(--accent); box-shadow: 0 0 14px rgba(30, 199, 255, 0.35); }
         #uploadWrapper { border: 2px dashed var(--border-soft); border-radius: 16px; background: linear-gradient(160deg, rgba(6, 20, 55, .95), rgba(9, 29, 72, .75)); padding: 24px; text-align: center; margin-bottom: 16px; transition: .2s ease; box-shadow: var(--glow); }
@@ -35,7 +36,7 @@
         .uploadButtonFake { height:48px; border-radius:10px; display:grid; place-items:center; background: var(--panel-soft); border:1px solid var(--border-soft); }
         #breadcrumb { margin: 12px 0; color: var(--muted); }
         #breadcrumb a { color: #c7d2fe; text-decoration:none; }
-        .section-title { margin: 18px 0 8px; color: var(--muted); font-size: .95rem; }
+        .section-title { margin: 18px 0 8px; color: #c4e9ff; font-size: 1rem; font-weight:700; letter-spacing:.02em; }
         .grid { display:grid; grid-template-columns: repeat(auto-fill,minmax(150px,1fr)); gap: 12px; }
         .grid.list { display:flex; flex-direction:column; }
         .grid.list .card { flex-direction:row; justify-content:flex-start; align-items:center; min-height:64px; gap:12px; }
@@ -44,8 +45,9 @@
         .card:hover { transform: translateY(-2px); border-color:#56d9ff; box-shadow: var(--glow); }
         .card img { width:56px; height:56px; object-fit:contain; }
         .card:focus { outline:2px solid var(--accent); outline-offset:2px; }
-        .name { font-size: .85rem; text-align:center; overflow-wrap:anywhere; }
+        .name { font-size: .9rem; text-align:center; overflow-wrap:anywhere; font-weight:600; color:#eaf5ff; text-shadow: 0 0 6px rgba(10, 39, 78, .45); }
         .folder-card { min-height: 100px; }
+        .folder-card.drag-over { border-color: #61e4ff; box-shadow: 0 0 0 2px rgba(97,228,255,.35), 0 0 22px rgba(30,199,255,.35); }
         .dropdown-content { display:none; position:absolute; top:8px; right:8px; background:#040f2a; border:1px solid var(--border-soft); border-radius:8px; overflow:hidden; z-index:2; }
         .dropdown-content a { display:block; color:var(--text); text-decoration:none; padding:8px 10px; font-size:.85rem; }
         .dropdown-content a:hover { background:#1e293b; }
@@ -53,6 +55,8 @@
         #leftSidebar { position: fixed; right: 24px; bottom: 24px; }
         #leftSidebar img { width: 54px; height:54px; cursor:pointer; background: linear-gradient(180deg, var(--accent), var(--accent-soft)); border-radius:50%; padding: 12px; box-shadow: 0 0 18px rgba(30,199,255,.55); }
         #leftSidebar img:hover { filter: brightness(1.08); }
+        .folder-card img, .card img { filter: brightness(0) saturate(100%) invert(73%) sepia(39%) saturate(1592%) hue-rotate(165deg) brightness(103%) contrast(102%); }
+        .card img[alt='File icon'][src*='/mainStorage/'] { filter: none; }
         .modal { display:none; position:fixed; inset:0; background: rgba(0,0,0,.45); z-index: 9999; }
         .modal-content { width:min(420px,90%); margin: 15vh auto; background: #e7f4ff; color:#09203f; border-radius: 14px; padding: 16px; border:1px solid #62c7ff; }
         .modal-content input { width:100%; padding:10px; margin-bottom: 10px; }
@@ -69,7 +73,7 @@
             x.form.submit();
         }
         function highlightField(){ document.getElementById("uploadWrapper").style.borderColor = "#22c55e"; }
-        function normalizeField(){ document.getElementById("uploadWrapper").style.borderColor = "#334155"; }
+        function normalizeField(){ document.getElementById("uploadWrapper").style.borderColor = "rgba(89, 189, 255, 0.45)"; }
         function preventBrowserDropNavigation(){
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                 window.addEventListener(eventName, function(event){
@@ -177,7 +181,7 @@ if(isset($_GET["Pfad0"])){
     print "<p class='section-title'>Folders</p><div class='grid'>";
     foreach($scanned_directory as $entry){
         if(strpos($entry, ".") === false){
-            echo "<div class='card folder-card' tabindex='0' role='link' aria-label='Ordner ".$entry."' data-href='".$_SERVER['REQUEST_URI'].($cntPath == 0 ? "?" : "&")."Pfad".$cntPath."=".$entry."' data-name='".$entry."' oncontextmenu='openDropdownFolder(this)' onclick='openFolderCard(event, this)' onkeydown='openFolderCardByKey(event, this)'>";
+            echo "<div class='card folder-card' tabindex='0' role='link' aria-label='Ordner ".$entry."' data-folder-name=\"".htmlspecialchars($entry, ENT_QUOTES)."\" data-href='".$_SERVER['REQUEST_URI'].($cntPath == 0 ? "?" : "&")."Pfad".$cntPath."=".$entry."' data-name='".$entry."' oncontextmenu='openDropdownFolder(this)' onclick='openFolderCard(event, this)' onkeydown='openFolderCardByKey(event, this)'>";
             echo "<img loading='lazy' src='../media/folder-open.svg' alt='Folder'>";
             echo '<div class="dropdown-content">';
             echo '<a href="downloadFolder.php?path='.urlencode($path).'&folder='.urlencode($entry).'">Download ZIP</a>';
@@ -200,7 +204,7 @@ if(isset($_GET["Pfad0"])){
             elseif(stripos($entry, ".zip") !== false){ $media = "../media/folder.svg"; }
             else{ $media = "../media/file.svg"; }
 
-            echo "<div class='card' tabindex='0' role='button' aria-label='Datei ".$entry."' data-name='".$entry."' oncontextmenu='openDropdown(this)' onclick='previewFile(\"".$entry."\", \"".$media."\", \"".$path."/".$entry."\")'><img loading='lazy' src='".$media."' alt='File icon'>";
+            echo "<div class='card' tabindex='0' role='button' aria-label='Datei ".$entry."' data-file-name=\"".htmlspecialchars($entry, ENT_QUOTES)."\" data-name='".$entry."' oncontextmenu='openDropdown(this)' onclick='previewFile(\"".$entry."\", \"".$media."\", \"".$path."/".$entry."\")'><img loading='lazy' src='".$media."' alt='File icon'>";
             echo '<div class="dropdown-content">';
             echo '<a href="'.$path.'/'.$entry.'" download>Download</a>';
             echo '<form action="deleteFile.php" method="post" style="margin:0;">';
@@ -251,6 +255,20 @@ if(isset($_GET["Pfad0"])){
         `;
         modal.style.display = "block";
     }
+    function moveFileToFolder(fileName, targetFolder){
+        if(!fileName || !targetFolder) return;
+        const form = document.createElement('form');
+        form.method = 'post';
+        form.action = 'moveFile.php';
+        form.innerHTML = `
+            <input type="hidden" name="path" value="<?php echo htmlspecialchars($path, ENT_QUOTES); ?>">
+            <input type="hidden" name="fileName" value="${fileName}">
+            <input type="hidden" name="targetFolder" value="${targetFolder}">
+            <input type="hidden" name="currentUrl" value="<?php echo htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES); ?>">
+        `;
+        document.body.appendChild(form);
+        form.submit();
+    }
     function deleteFromPreview(fileName){
         const form = document.createElement('form');
         form.method = 'post';
@@ -277,6 +295,26 @@ if(isset($_GET["Pfad0"])){
             btn.setAttribute("aria-pressed","true");
             btn.innerText="◫ Grid View";
         }
+        document.querySelectorAll(".card[data-file-name]").forEach(fileCard => {
+            fileCard.setAttribute("draggable", "true");
+            fileCard.addEventListener("dragstart", (event) => {
+                event.dataTransfer.setData("text/plain", fileCard.dataset.fileName);
+            });
+        });
+        document.querySelectorAll(".folder-card[data-folder-name]").forEach(folderCard => {
+            folderCard.addEventListener("dragover", (event) => {
+                event.preventDefault();
+                folderCard.classList.add("drag-over");
+            });
+            folderCard.addEventListener("dragleave", () => folderCard.classList.remove("drag-over"));
+            folderCard.addEventListener("drop", (event) => {
+                event.preventDefault();
+                folderCard.classList.remove("drag-over");
+                const fileName = event.dataTransfer.getData("text/plain");
+                const targetFolder = folderCard.dataset.folderName;
+                if (fileName && targetFolder) moveFileToFolder(fileName, targetFolder);
+            });
+        });
     });
 </script>
 </body>
