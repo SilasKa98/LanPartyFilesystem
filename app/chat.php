@@ -62,6 +62,7 @@
 </div>
 
 <div id="nameGate"><div class="gateCard"><h3>Willkommen im Chat</h3><p class="muted">Bitte gib deinen Namen ein, um fortzufahren.</p><div class="row"><input id="nameInput" maxlength="40" placeholder="Dein Name" style="flex:1"><button id="continueBtn" type="button">Weiter</button></div></div></div>
+<audio id="notifAudio" preload="auto"><source src="data:audio/wav;base64,UklGRlQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YTAAAAAAAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA" type="audio/wav"></audio>
 
 <script>
 const box=document.getElementById('chatBox');
@@ -71,14 +72,26 @@ let username=''; let room='';
 let visitedRooms=[];
 let roomLastTs={};
 let notificationsEnabled=false;
+let audioUnlocked=false;
 
 function fmt(ts){return new Date(ts*1000).toLocaleString('de-DE');}
 function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function renderEmojiPanel(){const p=document.getElementById('emojiPanel');p.innerHTML='';emojiList.forEach(e=>{const b=document.createElement('button');b.type='button';b.className='emoji';b.textContent=e;b.onclick=()=>{const t=document.getElementById('text');t.value+=e;t.focus();};p.appendChild(b);});}
 function persistState(){sessionStorage.setItem('chat_visited_rooms',JSON.stringify(visitedRooms));sessionStorage.setItem('chat_room_last_ts',JSON.stringify(roomLastTs));}
 function markRoomVisited(name){if(!visitedRooms.includes(name)){visitedRooms.push(name);}persistState();}
-function playNotificationTone(){try{const ctx=new (window.AudioContext||window.webkitAudioContext)();const osc=ctx.createOscillator();const gain=ctx.createGain();osc.connect(gain);gain.connect(ctx.destination);osc.type='sine';osc.frequency.value=880;gain.gain.setValueAtTime(0.0001,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(0.2,ctx.currentTime+0.01);gain.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.25);osc.start();osc.stop(ctx.currentTime+0.26);}catch(e){}}
-function notify(message){if(notificationsEnabled && Notification.permission==='granted'){new Notification(message);}playNotificationTone();}
+function playNotificationTone(){
+  const audio=document.getElementById('notifAudio');
+  if(!audio){return;}
+  audio.currentTime=0;
+  const playPromise=audio.play();
+  if(playPromise && typeof playPromise.catch==='function'){playPromise.catch(()=>{});}
+}
+function notify(message){
+  if(notificationsEnabled && Notification.permission==='granted'){
+    new Notification(message,{body:'Öffne den Chat, um zu antworten.'});
+  }
+  playNotificationTone();
+}
 
 async function loadRooms(){
   const r=await fetch('chat_api.php?action=listRooms');
@@ -106,6 +119,7 @@ async function load(){
   box.scrollTop=box.scrollHeight;
   document.getElementById('roomLabel').textContent='Raum: '+room;
   if(messages.length){roomLastTs[room]=messages[messages.length-1].ts||0;persistState();}
+  unlockAudio();
   await loadRooms();
 }
 
@@ -132,6 +146,15 @@ async function pollVisitedRooms(){
       persistState();
     }
   }
+}
+
+function unlockAudio(){
+  if(audioUnlocked){return;}
+  const audio=document.getElementById('notifAudio');
+  if(!audio){return;}
+  audio.volume=0;
+  const p=audio.play();
+  if(p && typeof p.then==='function'){p.then(()=>{audio.pause();audio.currentTime=0;audio.volume=1;audioUnlocked=true;}).catch(()=>{});}
 }
 
 document.getElementById('continueBtn').onclick=async()=>{
@@ -183,7 +206,8 @@ document.addEventListener('click',(e)=>{
   if(!panel.contains(e.target) && e.target!==toggle){panel.style.display='none';}
 });
 
-setInterval(()=>{if(username&&room){load();}if(username){pollVisitedRooms();}},3000);
+setInterval(()=>{if(username&&room){load();}if(username){pollVisitedRooms();}},2500);
+document.addEventListener('visibilitychange',()=>{if(username){pollVisitedRooms();}});
 (async()=>{
   renderEmojiPanel();
   visitedRooms=JSON.parse(sessionStorage.getItem('chat_visited_rooms')||'[]');
