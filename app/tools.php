@@ -147,7 +147,7 @@ function renderDoubleElimination(box, teams){
         const rect=document.createElementNS(svg.namespaceURI,'rect');
         rect.setAttribute('x',x);rect.setAttribute('y',y);rect.setAttribute('width',nodeW);rect.setAttribute('height',nodeH);rect.setAttribute('rx',10);
         rect.setAttribute('class','node');
-        if(isWinner){rect.setAttribute('fill','#22c55e');rect.setAttribute('stroke','#166534');rect.setAttribute('stroke-width','3');}
+        if(isWinner){rect.style.fill='#22c55e';rect.style.stroke='#166534';rect.style.strokeWidth='3px';}
         const text=document.createElementNS(svg.namespaceURI,'text');
         text.setAttribute('x',x+8);text.setAttribute('y',y+20);text.setAttribute('class','nodeText');text.textContent=displayName;
         if(displayName!=='BYE'){
