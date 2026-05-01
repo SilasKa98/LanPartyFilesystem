@@ -181,7 +181,7 @@ function renderDoubleElimination(box, teams){
     }
     const losers=upper.filter((m)=>teamDisplayName(m.b)!=='BYE').map((m)=>m.winner===m.a.id?m.b:m.a);
     if(!losers.length){return;}
-    drawBracketSvg(lowerWrap,pairSingle(losers.map((t,i)=>({...t,label:t.name||`Lower ${i+1}`}))),'Lower Bracket');
+    drawBracketSvg(lowerWrap,pairSingle(losers.map((t,i)=>({...t,label:teamDisplayName(t)||`Lower ${i+1}`}))),'Lower Bracket');
   };
   render();
 }
