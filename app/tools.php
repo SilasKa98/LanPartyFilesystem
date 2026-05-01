@@ -24,7 +24,7 @@ textarea{width:100%;min-height:120px;resize:vertical}.btn{background:#1f6fff;col
     <h2 style="margin-top:0">🎲 Team Randomizer (Skill-balanced)</h2>
     <p class="meta">Namen je Zeile eingeben mit optionalem Skill in Klammern, z. B. <code>Alex (7)</code>. Ohne Angabe wird Skill 5 genutzt.</p>
     <div class="row">
-      <input id="teamSize" class="input" type="number" min="2" value="3" style="width:160px" placeholder="Teamgröße">
+      <input id="teamSize" class="input" type="number" min="1" value="3" style="width:160px" placeholder="Teamgröße">
       <button class="btn" id="drawBtn">Teams auslosen</button>
       <button class="btn ghost" id="demoBtn">Demo-Daten</button><select id="tournamentType" class="input"><option value="single">Single Elimination</option><option value="double">Double Elimination (Light)</option><option value="roundrobin">Round Robin</option></select><button class="btn ghost" id="buildTournamentBtn">Turnierbaum erstellen</button>
     </div>
@@ -127,7 +127,7 @@ function renderTournament(teams){
 
 document.getElementById('drawBtn').onclick=()=>{
   const players=parsePlayers(document.getElementById('players').value);
-  const size=Math.max(2,parseInt(document.getElementById('teamSize').value||'3',10));
+  const size=Math.max(1,parseInt(document.getElementById('teamSize').value||'3',10));
   if(players.length<size){alert('Bitte mehr Spieler eintragen.');return;}
   const teams=balanceTeams(players,size);
   renderBalls(players);
