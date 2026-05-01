@@ -13,6 +13,7 @@ textarea{width:100%;min-height:120px;resize:vertical}.btn{background:#1f6fff;col
 .ball{position:absolute;padding:7px 10px;border-radius:999px;background:#1f6fff;color:#fff;font-weight:700;font-size:.88rem;box-shadow:0 8px 20px rgba(31,111,255,.3);transition:transform .7s ease,left .7s ease,top .7s ease,background .7s ease}
 .team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px}
 .team{background:#fff;border:1px solid #dbe7ff;border-radius:14px;padding:12px}.team h3{margin:0 0 8px}.meta{color:#58709a;font-size:.9rem}.bracketWrap{background:#fff;border:1px solid #dbe7ff;border-radius:14px;padding:10px;overflow:auto}.bracketSvg{min-width:900px;height:420px}.node{fill:#1f6fff;stroke:#0f4ccc;stroke-width:1.5}.nodeText{fill:#fff;font-size:11px;font-weight:700}.edge{stroke:#7aa7ff;stroke-width:2;fill:none;stroke-dasharray:8 6;animation:dash 1.8s linear infinite}@keyframes dash{to{stroke-dashoffset:-28}}
+#tournament{display:flex !important;flex-direction:column;gap:14px}
 </style>
 </head>
 <body>
@@ -126,7 +127,7 @@ function renderDoubleElimination(box, teams){
   const panel=document.createElement('div');panel.className='team';
   panel.innerHTML='<h3>Upper Bracket – Gewinner markieren</h3><div class="meta">Klicke im Upper Bracket auf den Team-Knoten. Der Gewinner wird grün markiert. Danach wird das Lower Bracket animiert erzeugt.</div>';
   const upperWrap=document.createElement('div');upperWrap.className='bracketWrap';upperWrap.style.marginBottom='18px';
-  const lowerWrap=document.createElement('div');lowerWrap.className='bracketWrap';
+  const lowerWrap=document.createElement('div');
   box.appendChild(panel);box.appendChild(upperWrap);box.appendChild(lowerWrap);
   const upper=createUpperRound(teams);
   const nodeW=220,nodeH=32,gapY=74,startY=34,leftX=30,rightX=360,midX=300;
@@ -146,7 +147,7 @@ function renderDoubleElimination(box, teams){
         const rect=document.createElementNS(svg.namespaceURI,'rect');
         rect.setAttribute('x',x);rect.setAttribute('y',y);rect.setAttribute('width',nodeW);rect.setAttribute('height',nodeH);rect.setAttribute('rx',10);
         rect.setAttribute('class','node');
-        if(isWinner){rect.setAttribute('fill','#16a34a');rect.setAttribute('stroke','#15803d');}
+        if(isWinner){rect.setAttribute('fill','#22c55e');rect.setAttribute('stroke','#166534');rect.setAttribute('stroke-width','3');}
         const text=document.createElementNS(svg.namespaceURI,'text');
         text.setAttribute('x',x+8);text.setAttribute('y',y+20);text.setAttribute('class','nodeText');text.textContent=displayName;
         if(displayName!=='BYE'){
