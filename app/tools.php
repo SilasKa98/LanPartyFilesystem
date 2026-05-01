@@ -104,6 +104,23 @@ function createUpperRound(teams){
 function teamDisplayName(team){
   return team?.label || team?.name || 'Unbekannt';
 }
+function createRoundState(participants){
+  const matches=[];
+  for(let i=0;i<participants.length;i+=2){
+    matches.push({a:participants[i],b:participants[i+1]||{name:'BYE',skill:0,id:`bye-${i}`},winner:null});
+  }
+  return matches;
+}
+function buildNextRound(matches){
+  const winners=[];
+  for(const m of matches){
+    const aName=teamDisplayName(m.a),bName=teamDisplayName(m.b);
+    if(bName==='BYE'){winners.push(m.a);continue;}
+    if(m.winner===m.a.id){winners.push(m.a);}
+    if(m.winner===m.b.id){winners.push(m.b);}
+  }
+  return winners;
+}
 function drawBracketSvg(targetBox, rounds, title){
   const wrap=document.createElement('div');wrap.className='bracketWrap';
   const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('class','bracketSvg');
@@ -129,7 +146,7 @@ function renderDoubleElimination(box, teams){
   const upperWrap=document.createElement('div');upperWrap.className='bracketWrap';upperWrap.style.marginBottom='18px';
   const lowerWrap=document.createElement('div');
   box.appendChild(panel);box.appendChild(upperWrap);box.appendChild(lowerWrap);
-  const upper=createUpperRound(teams);
+  const upper=createRoundState(teams);
   const nodeW=220,nodeH=32,gapY=74,startY=34,leftX=30,rightX=360,midX=300;
   const render=()=>{
     upperWrap.innerHTML='';
@@ -179,9 +196,31 @@ function renderDoubleElimination(box, teams){
       lowerWrap.appendChild(hint);
       return;
     }
-    const losers=upper.filter((m)=>teamDisplayName(m.b)!=='BYE').map((m)=>m.winner===m.a.id?m.b:m.a);
+    const upperWinners=buildNextRound(upper);
+    if(upperWinners.length>=2){
+      const nextTitle=document.createElement('div');nextTitle.className='meta';nextTitle.style.marginTop='8px';
+      nextTitle.textContent='Nächste Upper-Runde: '+upperWinners.map((t)=>teamDisplayName(t)).join(' vs ');
+      upperWrap.appendChild(nextTitle);
+    }
+    const losers=upper.filter((m)=>teamDisplayName(m.b)!=='BYE' && m.winner!==null).map((m)=>m.winner===m.a.id?m.b:m.a);
     if(!losers.length){return;}
-    drawBracketSvg(lowerWrap,pairSingle(losers.map((t,i)=>({...t,label:teamDisplayName(t)||`Lower ${i+1}`}))),'Lower Bracket');
+    const lowerTitle=document.createElement('h3');lowerTitle.textContent='Lower Bracket – Gewinner markieren';lowerWrap.appendChild(lowerTitle);
+    const lowerState=createRoundState(losers.map((t)=>({...t,label:teamDisplayName(t)})));
+    lowerState.forEach((m)=>{
+      const row=document.createElement('div');row.className='meta';row.style.margin='8px 0';
+      const a=document.createElement('button');a.className='btn ghost';a.textContent=teamDisplayName(m.a);
+      const b=document.createElement('button');b.className='btn ghost';b.textContent=teamDisplayName(m.b);
+      a.onclick=()=>{m.winner=m.a.id;rerenderLower();};
+      b.onclick=()=>{if(teamDisplayName(m.b)==='BYE')return;m.winner=m.b.id;rerenderLower();};
+      row.append(a,document.createTextNode(' vs '),b);
+      lowerWrap.appendChild(row);
+    });
+    function rerenderLower(){
+      const decided=buildNextRound(lowerState);
+      lowerWrap.querySelectorAll('.bracketWrap').forEach((n)=>n.remove());
+      if(decided.length>=2){drawBracketSvg(lowerWrap,pairSingle(decided.map((t)=>({...t,label:teamDisplayName(t)}))),'Lower Bracket (nächste Runde)');}
+    }
+    rerenderLower();
   };
   render();
 }
