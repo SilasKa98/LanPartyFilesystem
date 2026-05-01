@@ -171,10 +171,10 @@ function renderInteractiveBracket(container, title, rounds){
   const heading=document.createElement('h3');heading.textContent=title;wrap.appendChild(heading);
   const hint=document.createElement('div');hint.className='meta';hint.style.marginBottom='8px';hint.textContent='Klicke auf ein Team, um den Gewinner eines Matches festzulegen.';wrap.appendChild(hint);
   const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('class','bracketSvg');
-  const roundGap=220,nodeW=170,nodeH=30,startX=24,startY=34,slotGap=62;
+  const roundGap=240,nodeW=180,nodeH=30,teamGap=10,matchHeight=nodeH*2+teamGap,startX=24,startY=34,baseGap=26;
   const positions=[];
-  rounds.forEach((matches,ri)=>{positions[ri]=[];matches.forEach((m,mi)=>{
-    const x=startX+ri*roundGap;const y=startY+mi*slotGap*Math.pow(2,ri);positions[ri][mi]={x,y,m};
+  rounds.forEach((matches,ri)=>{positions[ri]=[];const slotGap=(matchHeight+baseGap)*Math.pow(2,ri);matches.forEach((m,mi)=>{
+    const x=startX+ri*roundGap;const y=startY+mi*slotGap;const centerY=y+matchHeight/2;positions[ri][mi]={x,y,centerY,m};
     const drawTeam=(team,isWinner,onClick,offset)=>{
       const name=teamDisplayName(team);const gy=y+offset;
       const g=document.createElementNS(svg.namespaceURI,'g');
@@ -185,16 +185,17 @@ function renderInteractiveBracket(container, title, rounds){
       g.append(rect,text);svg.appendChild(g);
     };
     drawTeam(m.a,m.winner===m.a.id,()=>{m.winner=m.a.id;renderTournament(window.lastTeams);},0);
-    drawTeam(m.b,m.winner===m.b.id,()=>{if(teamDisplayName(m.b)==='BYE')return;m.winner=m.b.id;renderTournament(window.lastTeams);},nodeH+8);
+    drawTeam(m.b,m.winner===m.b.id,()=>{if(teamDisplayName(m.b)==='BYE')return;m.winner=m.b.id;renderTournament(window.lastTeams);},nodeH+teamGap);
   });});
   for(let r=0;r<positions.length-1;r++){
     positions[r].forEach((p,i)=>{const next=positions[r+1][Math.floor(i/2)];if(!next)return;
       const path=document.createElementNS(svg.namespaceURI,'path');
-      const x1=p.x+nodeW,y1=p.y+nodeH+4,x2=next.x,y2=next.y+nodeH+15,mx=(x1+x2)/2;
+      const x1=p.x+nodeW,y1=p.centerY,x2=next.x,y2=next.centerY,mx=(x1+x2)/2;
       path.setAttribute('d',`M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`);path.setAttribute('class','edge');svg.insertBefore(path,svg.firstChild);
     });
   }
-  svg.style.height=Math.max(340,startY+Math.pow(2,Math.max(0,rounds.length-1))*slotGap+80)+'px';
+  const totalHeight=startY + ((matchHeight+baseGap)*Math.pow(2,Math.max(0,rounds.length-1))) + 80;
+  svg.style.height=Math.max(360,totalHeight)+'px';
   wrap.appendChild(svg);container.appendChild(wrap);
 }
 function renderDoubleElimination(box, teams){
