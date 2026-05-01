@@ -12,7 +12,7 @@ textarea{width:100%;min-height:120px;resize:vertical}.btn{background:#1f6fff;col
 #arena{margin-top:16px;min-height:240px;position:relative;overflow:hidden;border:1px dashed #c9dcff;border-radius:14px;background:linear-gradient(180deg,#f7fbff,#eff6ff)}
 .ball{position:absolute;padding:7px 10px;border-radius:999px;background:#1f6fff;color:#fff;font-weight:700;font-size:.88rem;box-shadow:0 8px 20px rgba(31,111,255,.3);transition:transform .7s ease,left .7s ease,top .7s ease,background .7s ease}
 .team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px}
-.team{background:#fff;border:1px solid #dbe7ff;border-radius:14px;padding:12px}.team h3{margin:0 0 8px}.meta{color:#58709a;font-size:.9rem}.bracketWrap{background:#fff;border:1px solid #dbe7ff;border-radius:14px;padding:10px;overflow:auto}.bracketSvg{min-width:900px;height:420px}.node{fill:#1f6fff;stroke:#0f4ccc;stroke-width:1.5}.nodeText{fill:#fff;font-size:11px;font-weight:700}.edge{stroke:#7aa7ff;stroke-width:2;fill:none;stroke-dasharray:8 6;animation:dash 1.8s linear infinite}@keyframes dash{to{stroke-dashoffset:-28}}
+.team{background:#fff;border:1px solid #dbe7ff;border-radius:14px;padding:12px}.team h3{margin:0 0 8px}.meta{color:#58709a;font-size:.9rem}.bracketWrap{background:#fff;border:1px solid #dbe7ff;border-radius:14px;padding:10px;overflow:auto}.bracketSvg{min-width:900px;height:420px}.node{fill:#1f6fff;stroke:#0f4ccc;stroke-width:1.5;transition:all .2s}.nodeText{fill:#fff;font-size:11px;font-weight:700;pointer-events:none}.edge{stroke:#7aa7ff;stroke-width:2;fill:none;stroke-dasharray:8 6;animation:dash 1.8s linear infinite}.winner{fill:#22c55e;stroke:#166534;stroke-width:3}.nodeGroup{cursor:pointer}.nodeGroup.disabled{cursor:default;opacity:.75}@keyframes dash{to{stroke-dashoffset:-28}}
 #tournament{display:flex !important;flex-direction:column;gap:14px}
 </style>
 </head>
@@ -140,91 +140,72 @@ function drawBracketSvg(targetBox, rounds, title){
   }
   const h=document.createElement('h3');h.textContent=title;wrap.appendChild(h);wrap.appendChild(svg);targetBox.appendChild(wrap);
 }
+function createProgressiveRounds(participants){
+  const rounds=[];
+  let current=participants;
+  while(current.length>1){
+    const round=[];
+    for(let i=0;i<current.length;i+=2){
+      round.push({a:current[i],b:current[i+1]||{name:'BYE',skill:0,id:`bye-${rounds.length}-${i}`},winner:null});
+    }
+    rounds.push(round);
+    current=Array.from({length:Math.ceil(round.length/2)},(_,idx)=>({id:`pending-${rounds.length}-${idx}`,name:`Sieger R${rounds.length}M${idx+1}`}));
+  }
+  return rounds;
+}
+function resolveProgressiveRounds(rounds){
+  for(let ri=0;ri<rounds.length-1;ri++){
+    const winners=buildNextRound(rounds[ri]);
+    for(let i=0;i<rounds[ri+1].length;i++){
+      rounds[ri+1][i].a=winners[i*2]||{id:`pending-a-${ri}-${i}`,name:'TBD'};
+      rounds[ri+1][i].b=winners[i*2+1]||{id:`pending-b-${ri}-${i}`,name:'TBD'};
+      if(rounds[ri+1][i].winner && rounds[ri+1][i].winner!==rounds[ri+1][i].a.id && rounds[ri+1][i].winner!==rounds[ri+1][i].b.id){
+        rounds[ri+1][i].winner=null;
+      }
+    }
+  }
+}
+function renderInteractiveBracket(container, title, rounds){
+  resolveProgressiveRounds(rounds);
+  const wrap=document.createElement('div');wrap.className='bracketWrap';
+  const heading=document.createElement('h3');heading.textContent=title;wrap.appendChild(heading);
+  const hint=document.createElement('div');hint.className='meta';hint.style.marginBottom='8px';hint.textContent='Klicke auf ein Team, um den Gewinner eines Matches festzulegen.';wrap.appendChild(hint);
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('class','bracketSvg');
+  const roundGap=240,nodeW=180,nodeH=30,teamGap=10,matchHeight=nodeH*2+teamGap,startX=24,startY=34,baseGap=26;
+  const positions=[];
+  rounds.forEach((matches,ri)=>{positions[ri]=[];const slotGap=(matchHeight+baseGap)*Math.pow(2,ri);matches.forEach((m,mi)=>{
+    const x=startX+ri*roundGap;const y=startY+mi*slotGap;const centerY=y+matchHeight/2;positions[ri][mi]={x,y,centerY,m};
+    const drawTeam=(team,isWinner,onClick,offset)=>{
+      const name=teamDisplayName(team);const gy=y+offset;
+      const g=document.createElementNS(svg.namespaceURI,'g');
+      g.setAttribute('class',`nodeGroup ${name==='TBD'?'disabled':''}`);
+      const rect=document.createElementNS(svg.namespaceURI,'rect');rect.setAttribute('x',x);rect.setAttribute('y',gy);rect.setAttribute('width',nodeW);rect.setAttribute('height',nodeH);rect.setAttribute('rx',10);rect.setAttribute('class',`node ${isWinner?'winner':''}`);
+      const text=document.createElementNS(svg.namespaceURI,'text');text.setAttribute('x',x+8);text.setAttribute('y',gy+20);text.setAttribute('class','nodeText');text.textContent=name;
+      if(name!=='BYE'&&name!=='TBD'){g.addEventListener('click',onClick);} else {g.classList.add('disabled');}
+      g.append(rect,text);svg.appendChild(g);
+    };
+    drawTeam(m.a,m.winner===m.a.id,()=>{m.winner=m.a.id;renderTournament(window.lastTeams);},0);
+    drawTeam(m.b,m.winner===m.b.id,()=>{if(teamDisplayName(m.b)==='BYE')return;m.winner=m.b.id;renderTournament(window.lastTeams);},nodeH+teamGap);
+  });});
+  for(let r=0;r<positions.length-1;r++){
+    positions[r].forEach((p,i)=>{const next=positions[r+1][Math.floor(i/2)];if(!next)return;
+      const path=document.createElementNS(svg.namespaceURI,'path');
+      const x1=p.x+nodeW,y1=p.centerY,x2=next.x,y2=next.centerY,mx=(x1+x2)/2;
+      path.setAttribute('d',`M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`);path.setAttribute('class','edge');svg.insertBefore(path,svg.firstChild);
+    });
+  }
+  const totalHeight=startY + ((matchHeight+baseGap)*Math.pow(2,Math.max(0,rounds.length-1))) + 80;
+  svg.style.height=Math.max(360,totalHeight)+'px';
+  wrap.appendChild(svg);container.appendChild(wrap);
+}
 function renderDoubleElimination(box, teams){
-  const panel=document.createElement('div');panel.className='team';
-  panel.innerHTML='<h3>Upper Bracket – Gewinner markieren</h3><div class="meta">Klicke im Upper Bracket auf den Team-Knoten. Der Gewinner wird grün markiert. Danach wird das Lower Bracket animiert erzeugt.</div>';
-  const upperWrap=document.createElement('div');upperWrap.className='bracketWrap';upperWrap.style.marginBottom='18px';
-  const lowerWrap=document.createElement('div');
-  box.appendChild(panel);box.appendChild(upperWrap);box.appendChild(lowerWrap);
-  const upper=createRoundState(teams);
-  const nodeW=220,nodeH=32,gapY=74,startY=34,leftX=30,rightX=360,midX=300;
-  const render=()=>{
-    upperWrap.innerHTML='';
-    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
-    svg.setAttribute('class','bracketSvg');
-    svg.style.minWidth='700px';
-    svg.style.height=Math.max(360,startY+upper.length*gapY+40)+'px';
-    upper.forEach((m,idx)=>{
-      const y=startY+idx*gapY;
-      const winnerA=m.winner===m.a.id;
-      const winnerB=m.winner===m.b.id;
-      const drawNode=(team,x,isWinner,onClick)=>{
-        const displayName=teamDisplayName(team);
-        const g=document.createElementNS(svg.namespaceURI,'g');
-        const rect=document.createElementNS(svg.namespaceURI,'rect');
-        rect.setAttribute('x',x);rect.setAttribute('y',y);rect.setAttribute('width',nodeW);rect.setAttribute('height',nodeH);rect.setAttribute('rx',10);
-        rect.setAttribute('class','node');
-        if(isWinner){rect.style.fill='#22c55e';rect.style.stroke='#166534';rect.style.strokeWidth='3px';}
-        const text=document.createElementNS(svg.namespaceURI,'text');
-        text.setAttribute('x',x+8);text.setAttribute('y',y+20);text.setAttribute('class','nodeText');text.textContent=displayName;
-        if(displayName!=='BYE'){
-          g.style.cursor='pointer';
-          g.addEventListener('click',onClick);
-        }
-        g.append(rect,text);
-        svg.appendChild(g);
-      };
-      drawNode(m.a,leftX,winnerA,()=>{m.winner=m.a.id;render();});
-      drawNode(m.b,rightX,winnerB,()=>{m.winner=m.b.id;render();});
-      const edge1=document.createElementNS(svg.namespaceURI,'path');
-      edge1.setAttribute('d',`M ${leftX+nodeW} ${y+nodeH/2} C ${midX} ${y+nodeH/2}, ${midX-20} ${y+nodeH/2}, ${midX} ${y+nodeH/2}`);
-      edge1.setAttribute('class','edge');
-      svg.insertBefore(edge1,svg.firstChild);
-      const edge2=document.createElementNS(svg.namespaceURI,'path');
-      edge2.setAttribute('d',`M ${rightX} ${y+nodeH/2} C ${midX+80} ${y+nodeH/2}, ${midX+40} ${y+nodeH/2}, ${midX} ${y+nodeH/2}`);
-      edge2.setAttribute('class','edge');
-      svg.insertBefore(edge2,svg.firstChild);
-    });
-    upperWrap.appendChild(svg);
-    upper.forEach((m,idx)=>{
-      if(teamDisplayName(m.b)==='BYE' && !m.winner){m.winner=m.a.id;}
-    });
-    lowerWrap.innerHTML='';
-    const undecided=upper.some((m)=>m.winner===null && teamDisplayName(m.b)!=='BYE');
-    if(undecided){
-      const hint=document.createElement('div');hint.className='meta';hint.textContent='Lower Bracket wird gebaut, sobald alle Gewinner im Upper Bracket markiert sind.';
-      lowerWrap.appendChild(hint);
-      return;
-    }
-    const upperWinners=buildNextRound(upper);
-    upperWrap.querySelectorAll('.upper-next').forEach((n)=>n.remove());
-    if(upperWinners.length>=2){
-      const nextHolder=document.createElement('div');
-      nextHolder.className='upper-next';
-      drawBracketSvg(nextHolder,pairSingle(upperWinners.map((t)=>({...t,label:teamDisplayName(t)}))),'Upper Bracket – nächste Runden');
-      upperWrap.appendChild(nextHolder);
-    }
-    const losers=upper.filter((m)=>teamDisplayName(m.b)!=='BYE' && m.winner!==null).map((m)=>m.winner===m.a.id?m.b:m.a);
-    if(!losers.length){return;}
-    const lowerTitle=document.createElement('h3');lowerTitle.textContent='Lower Bracket – Gewinner markieren';lowerWrap.appendChild(lowerTitle);
-    const lowerState=createRoundState(losers.map((t)=>({...t,label:teamDisplayName(t)})));
-    lowerState.forEach((m)=>{
-      const row=document.createElement('div');row.className='meta';row.style.margin='8px 0';
-      const a=document.createElement('button');a.className='btn ghost';a.textContent=teamDisplayName(m.a);
-      const b=document.createElement('button');b.className='btn ghost';b.textContent=teamDisplayName(m.b);
-      a.onclick=()=>{m.winner=m.a.id;rerenderLower();};
-      b.onclick=()=>{if(teamDisplayName(m.b)==='BYE')return;m.winner=m.b.id;rerenderLower();};
-      row.append(a,document.createTextNode(' vs '),b);
-      lowerWrap.appendChild(row);
-    });
-    function rerenderLower(){
-      const decided=buildNextRound(lowerState);
-      lowerWrap.querySelectorAll('.bracketWrap').forEach((n)=>n.remove());
-      if(decided.length>=2){drawBracketSvg(lowerWrap,pairSingle(decided.map((t)=>({...t,label:teamDisplayName(t)}))),'Lower Bracket (nächste Runde)');}
-    }
-    rerenderLower();
-  };
-  render();
+  const info=document.createElement('div');info.className='team';
+  info.innerHTML='<h3>Double Elimination – Interaktiv</h3><div class="meta">Gewinner pro Match in Upper und Lower Bracket anklicken. Gewinner werden grün markiert.</div>';
+  box.appendChild(info);
+  const state=window.doubleState||{upper:createProgressiveRounds(teams),lower:createProgressiveRounds(teams.map(t=>({...t,id:`L-${t.id}`})))};
+  window.doubleState=state;
+  renderInteractiveBracket(box,'Upper Bracket',state.upper);
+  renderInteractiveBracket(box,'Lower Bracket',state.lower);
 }
 function renderTournament(teams){
   const box=document.getElementById('tournament');
@@ -233,7 +214,9 @@ function renderTournament(teams){
   if(!teams.length){return;}
 
   if(mode==='single'){
-    drawBracketSvg(box,pairSingle(teams),'Single Elimination');
+    const state=window.singleState||createProgressiveRounds(teams);
+    window.singleState=state;
+    renderInteractiveBracket(box,'Single Elimination',state);
   } else if(mode==='double'){
     renderDoubleElimination(box,teams);
   } else {
@@ -250,7 +233,7 @@ document.getElementById('drawBtn').onclick=()=>{
   const teams=balanceTeams(players,size);
   renderBalls(players);
   setTimeout(()=>animateToTeams(teams),500);
-  setTimeout(()=>{renderResult(teams);window.lastTeams=teams;},1400);
+  setTimeout(()=>{renderResult(teams);window.lastTeams=teams;window.singleState=null;window.doubleState=null;},1400);
 };
 document.getElementById('demoBtn').onclick=()=>{document.getElementById('players').value='Mia (8)\nNoah (6)\nLuca (4)\nEmma (9)\nFinn (5)\nLea (7)\nBen (3)\nNina (6)\nTom (8)';};
 document.getElementById('buildTournamentBtn').onclick=()=>{if(!window.lastTeams||!window.lastTeams.length){alert('Bitte zuerst Teams auslosen.');return;}renderTournament(window.lastTeams);};
