@@ -48,35 +48,34 @@ function shuffle(arr){
 }
 function balanceTeams(players, teamSize){
   const teamCount=Math.ceil(players.length/teamSize);
-  const teams=Array.from({length:teamCount},(_,i)=>({id:i,members:[],skill:0}));
+  const teams=Array.from({length:teamCount},(_,i)=>({id:i,members:[],skill:0,label:`Team ${i+1}`}));
   const randomized=shuffle(players);
   const sorted=[...randomized].sort((a,b)=>b.skill-a.skill);
   for(const p of sorted){
     teams.sort((a,b)=> (a.members.length-b.members.length) || (a.skill-b.skill) || (Math.random()-0.5));
     teams[0].members.push(p);teams[0].skill+=p.skill;
   }
-  return shuffle(teams);
+  return teams.map((team,idx)=>({...team,id:idx,label:`Team ${idx+1}`}));
 }
 function renderBalls(players){
   arena.innerHTML='';
   const w=arena.clientWidth-90,h=arena.clientHeight-40;
-  players.forEach((p,i)=>{const d=document.createElement('div');d.className='ball';d.textContent=`${p.name} (${p.skill})`;d.style.left=Math.max(0,Math.random()*w)+'px';d.style.top=Math.max(0,Math.random()*h)+'px';d.style.transform='scale(0.9)';arena.appendChild(d);setTimeout(()=>{d.style.transform='scale(1)'},30*i);});
+  players.forEach((p,i)=>{const d=document.createElement('div');d.className='ball';d.dataset.playerName=p.name;d.textContent=`${p.name} (${p.skill})`;d.style.left=Math.max(0,Math.random()*w)+'px';d.style.top=Math.max(0,Math.random()*h)+'px';d.style.transform='scale(0.9)';arena.appendChild(d);setTimeout(()=>{d.style.transform='scale(1)'},30*i);});
 }
 function animateToTeams(teams){
   const balls=[...arena.querySelectorAll('.ball')];
+  const ballByName=new Map(balls.map((ball)=>[ball.dataset.playerName,ball]));
   const colW=Math.max(180,arena.clientWidth/teams.length);
-  let idx=0;
-  teams.forEach((team,ti)=>{team.members.forEach((m,mi)=>{const b=balls[idx++]; if(!b) return; b.style.background=colors[ti%colors.length]; b.style.left=(ti*colW+12)+'px'; b.style.top=(18+mi*38)+'px';});});
+  teams.forEach((team,ti)=>{team.members.forEach((m,mi)=>{const b=ballByName.get(m.name); if(!b) return; b.style.background=colors[ti%colors.length]; b.style.left=(ti*colW+12)+'px'; b.style.top=(18+mi*38)+'px';});});
 }
 function renderResult(teams){
   result.innerHTML='';
-  teams.forEach((team,i)=>{const el=document.createElement('div');el.className='team';el.innerHTML=`<h3 style="color:${colors[i%colors.length]}">Team ${i+1}</h3><div class="meta">Gesamt-Skill: <strong>${team.skill}</strong></div><ul>${team.members.map(m=>`<li>${m.name} <small>(Skill ${m.skill})</small></li>`).join('')}</ul>`;result.appendChild(el);});
+  teams.forEach((team,i)=>{const el=document.createElement('div');el.className='team';el.innerHTML=`<h3 style="color:${colors[i%colors.length]}">${team.label}</h3><div class="meta">Gesamt-Skill: <strong>${team.skill}</strong></div><ul>${team.members.map(m=>`<li>${m.name} <small>(Skill ${m.skill})</small></li>`).join('')}</ul>`;result.appendChild(el);});
 }
 
 function pairSingle(teams){
-  const shuffled=shuffle(teams);
   const rounds=[];
-  let current=shuffled.map((t,i)=>({name:'Team '+(i+1),skill:t.skill,members:t.members}));
+  let current=teams.map((t)=>({name:t.label,skill:t.skill,members:t.members,id:t.id}));
   while(current.length>1){
     const matches=[];
     for(let i=0;i<current.length;i+=2){
@@ -118,11 +117,10 @@ function renderTournament(teams){
     drawBracket(pairSingle(teams),'Single Elimination');
   } else if(mode==='double'){
     drawBracket(pairSingle(teams),'Upper Bracket');
-    const lowerTeams=teams.map((t,i)=>({name:'Team '+(i+1),skill:Math.max(1,t.skill-1),members:t.members}));
-    drawBracket(pairSingle(lowerTeams),'Lower Bracket');
+    drawBracket(pairSingle(teams),'Lower Bracket');
   } else {
     const col=document.createElement('div');col.className='team';col.innerHTML='<h3>Round Robin Paarungen</h3>';
-    for(let i=0;i<teams.length;i++){for(let j=i+1;j<teams.length;j++){const a='Team '+(i+1),b='Team '+(j+1);col.innerHTML+=`<div class="meta">${a} vs ${b}</div>`;}}
+    for(let i=0;i<teams.length;i++){for(let j=i+1;j<teams.length;j++){const a=teams[i].label,b=teams[j].label;col.innerHTML+=`<div class="meta">${a} vs ${b}</div>`;}}
     box.appendChild(col);
   }
 }
