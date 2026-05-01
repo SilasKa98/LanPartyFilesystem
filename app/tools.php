@@ -55,7 +55,11 @@ function balanceTeams(players, teamSize){
     teams.sort((a,b)=> (a.members.length-b.members.length) || (a.skill-b.skill) || (Math.random()-0.5));
     teams[0].members.push(p);teams[0].skill+=p.skill;
   }
-  return teams.map((team,idx)=>({...team,id:idx,label:`Team ${idx+1}`}));
+  return teams.map((team,idx)=>{
+    const names=team.members.map((m)=>m.name);
+    const label=names.length<=1 ? (names[0]||`Team ${idx+1}`) : names.join(' / ');
+    return {...team,id:idx,label};
+  });
 }
 function renderBalls(players){
   arena.innerHTML='';
