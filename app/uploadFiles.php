@@ -1,48 +1,59 @@
 <?php
 
-$files = $_FILES["files"]["name"];
-$path = $_POST["path"];
+$maxPostSizeBytes = (int) ini_get('post_max_size') * 1024 * 1024;
 
-$finalpath = $path."/";
-$currentUrl = $_POST["currentUrl"];
-    $cnt=array();
-	$cnt=count($files);
-	for($i=0;$i<$cnt;$i++){
-        $fileName = $_FILES['files']['name'][$i];
-        if (($fileName !="")){
-            // Where the file is going to be stored
-            $target_dir = $finalpath;
-            $file = $_FILES['files']['name'][$i];
-            $path = pathinfo($file);
-            $filename = $path['filename'];
-            $ext = $path['extension'];
-            $temp_name = $_FILES['files']['tmp_name'][$i];
-            $path_filename_ext = $target_dir.$filename.".".$ext;
-            
-            // Check if file already exists
-            if (file_exists($path_filename_ext)) {
-                echo "Es existiert bereits eine Datei mit diesem Name.";
-            }else{
-                move_uploaded_file($temp_name,$path_filename_ext);
-            }
-        }
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo 'Methode nicht erlaubt.';
+    exit;
+}
+
+$currentUrl = $_POST['currentUrl'] ?? '../';
+$path = $_POST['path'] ?? null;
+
+if (empty($_POST) && (int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
+    $limitMb = (int) (ini_get('post_max_size'));
+    echo 'Upload zu groß. Erlaubt sind maximal '.$limitMb.' MB. Bitte php.ini (post_max_size / upload_max_filesize) erhöhen.';
+    exit;
+}
+
+if ($path === null || !isset($_FILES['files']) || !is_array($_FILES['files']['name'])) {
+    header('Location: '.$currentUrl);
+    exit;
+}
+
+$targetDir = rtrim($path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+$fileCount = count($_FILES['files']['name']);
+
+for ($i = 0; $i < $fileCount; $i++) {
+    $fileName = $_FILES['files']['name'][$i] ?? '';
+    $tmpName = $_FILES['files']['tmp_name'][$i] ?? '';
+    $uploadError = $_FILES['files']['error'][$i] ?? UPLOAD_ERR_NO_FILE;
+
+    if ($fileName === '' || $uploadError === UPLOAD_ERR_NO_FILE) {
+        continue;
     }
-    header("LOCATION:".$currentUrl);
 
+    if ($uploadError !== UPLOAD_ERR_OK) {
+        echo 'Upload-Fehler bei Datei '.$fileName.' (Code '.$uploadError.').';
+        continue;
+    }
 
+    $fileInfo = pathinfo($fileName);
+    $filename = $fileInfo['filename'] ?? '';
+    $extension = $fileInfo['extension'] ?? '';
 
+    $pathFilenameExt = $targetDir . $filename . ($extension !== '' ? '.'.$extension : '');
 
+    if (file_exists($pathFilenameExt)) {
+        echo 'Es existiert bereits eine Datei mit diesem Namen: '.$fileName.'.';
+        continue;
+    }
 
+    move_uploaded_file($tmpName, $pathFilenameExt);
+}
 
-
-
-
-
-
-
-
-
-
-
+header('Location: '.$currentUrl);
+exit;
 
 ?>

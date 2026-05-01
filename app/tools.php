@@ -13,6 +13,7 @@ textarea{width:100%;min-height:120px;resize:vertical}.btn{background:#1f6fff;col
 .ball{position:absolute;padding:7px 10px;border-radius:999px;background:#1f6fff;color:#fff;font-weight:700;font-size:.88rem;box-shadow:0 8px 20px rgba(31,111,255,.3);transition:transform .7s ease,left .7s ease,top .7s ease,background .7s ease}
 .team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px}
 .team{background:#fff;border:1px solid #dbe7ff;border-radius:14px;padding:12px}.team h3{margin:0 0 8px}.meta{color:#58709a;font-size:.9rem}.bracketWrap{background:#fff;border:1px solid #dbe7ff;border-radius:14px;padding:10px;overflow:auto}.bracketSvg{min-width:900px;height:420px}.node{fill:#1f6fff;stroke:#0f4ccc;stroke-width:1.5}.nodeText{fill:#fff;font-size:11px;font-weight:700}.edge{stroke:#7aa7ff;stroke-width:2;fill:none;stroke-dasharray:8 6;animation:dash 1.8s linear infinite}@keyframes dash{to{stroke-dashoffset:-28}}
+#tournament{display:flex !important;flex-direction:column;gap:14px}
 </style>
 </head>
 <body>
@@ -24,7 +25,7 @@ textarea{width:100%;min-height:120px;resize:vertical}.btn{background:#1f6fff;col
     <h2 style="margin-top:0">🎲 Team Randomizer (Skill-balanced)</h2>
     <p class="meta">Namen je Zeile eingeben mit optionalem Skill in Klammern, z. B. <code>Alex (7)</code>. Ohne Angabe wird Skill 5 genutzt.</p>
     <div class="row">
-      <input id="teamSize" class="input" type="number" min="2" value="3" style="width:160px" placeholder="Teamgröße">
+      <input id="teamSize" class="input" type="number" min="1" value="3" style="width:160px" placeholder="Teamgröße">
       <button class="btn" id="drawBtn">Teams auslosen</button>
       <button class="btn ghost" id="demoBtn">Demo-Daten</button><select id="tournamentType" class="input"><option value="single">Single Elimination</option><option value="double">Double Elimination (Light)</option><option value="roundrobin">Round Robin</option></select><button class="btn ghost" id="buildTournamentBtn">Turnierbaum erstellen</button>
     </div>
@@ -48,35 +49,38 @@ function shuffle(arr){
 }
 function balanceTeams(players, teamSize){
   const teamCount=Math.ceil(players.length/teamSize);
-  const teams=Array.from({length:teamCount},(_,i)=>({id:i,members:[],skill:0}));
+  const teams=Array.from({length:teamCount},(_,i)=>({id:i,members:[],skill:0,label:`Team ${i+1}`}));
   const randomized=shuffle(players);
   const sorted=[...randomized].sort((a,b)=>b.skill-a.skill);
   for(const p of sorted){
     teams.sort((a,b)=> (a.members.length-b.members.length) || (a.skill-b.skill) || (Math.random()-0.5));
     teams[0].members.push(p);teams[0].skill+=p.skill;
   }
-  return shuffle(teams);
+  return teams.map((team,idx)=>{
+    const names=team.members.map((m)=>m.name);
+    const label=names.length<=1 ? (names[0]||`Team ${idx+1}`) : names.join(' / ');
+    return {...team,id:idx,label};
+  });
 }
 function renderBalls(players){
   arena.innerHTML='';
   const w=arena.clientWidth-90,h=arena.clientHeight-40;
-  players.forEach((p,i)=>{const d=document.createElement('div');d.className='ball';d.textContent=`${p.name} (${p.skill})`;d.style.left=Math.max(0,Math.random()*w)+'px';d.style.top=Math.max(0,Math.random()*h)+'px';d.style.transform='scale(0.9)';arena.appendChild(d);setTimeout(()=>{d.style.transform='scale(1)'},30*i);});
+  players.forEach((p,i)=>{const d=document.createElement('div');d.className='ball';d.dataset.playerName=p.name;d.textContent=`${p.name} (${p.skill})`;d.style.left=Math.max(0,Math.random()*w)+'px';d.style.top=Math.max(0,Math.random()*h)+'px';d.style.transform='scale(0.9)';arena.appendChild(d);setTimeout(()=>{d.style.transform='scale(1)'},30*i);});
 }
 function animateToTeams(teams){
   const balls=[...arena.querySelectorAll('.ball')];
+  const ballByName=new Map(balls.map((ball)=>[ball.dataset.playerName,ball]));
   const colW=Math.max(180,arena.clientWidth/teams.length);
-  let idx=0;
-  teams.forEach((team,ti)=>{team.members.forEach((m,mi)=>{const b=balls[idx++]; if(!b) return; b.style.background=colors[ti%colors.length]; b.style.left=(ti*colW+12)+'px'; b.style.top=(18+mi*38)+'px';});});
+  teams.forEach((team,ti)=>{team.members.forEach((m,mi)=>{const b=ballByName.get(m.name); if(!b) return; b.style.background=colors[ti%colors.length]; b.style.left=(ti*colW+12)+'px'; b.style.top=(18+mi*38)+'px';});});
 }
 function renderResult(teams){
   result.innerHTML='';
-  teams.forEach((team,i)=>{const el=document.createElement('div');el.className='team';el.innerHTML=`<h3 style="color:${colors[i%colors.length]}">Team ${i+1}</h3><div class="meta">Gesamt-Skill: <strong>${team.skill}</strong></div><ul>${team.members.map(m=>`<li>${m.name} <small>(Skill ${m.skill})</small></li>`).join('')}</ul>`;result.appendChild(el);});
+  teams.forEach((team,i)=>{const el=document.createElement('div');el.className='team';el.innerHTML=`<h3 style="color:${colors[i%colors.length]}">${team.label}</h3><div class="meta">Gesamt-Skill: <strong>${team.skill}</strong></div><ul>${team.members.map(m=>`<li>${m.name} <small>(Skill ${m.skill})</small></li>`).join('')}</ul>`;result.appendChild(el);});
 }
 
 function pairSingle(teams){
-  const shuffled=shuffle(teams);
   const rounds=[];
-  let current=shuffled.map((t,i)=>({name:'Team '+(i+1),skill:t.skill,members:t.members}));
+  let current=teams.map((t)=>({name:t.label,skill:t.skill,members:t.members,id:t.id}));
   while(current.length>1){
     const matches=[];
     for(let i=0;i<current.length;i+=2){
@@ -88,48 +92,160 @@ function pairSingle(teams){
   }
   return rounds;
 }
+function createUpperRound(teams){
+  const matches=[];
+  for(let i=0;i<teams.length;i+=2){
+    const a=teams[i];
+    const b=teams[i+1]||{name:'BYE',skill:0,members:[],id:`bye-${i}`};
+    matches.push({a,b,winner:null});
+  }
+  return matches;
+}
+function teamDisplayName(team){
+  return team?.label || team?.name || 'Unbekannt';
+}
+function createRoundState(participants){
+  const matches=[];
+  for(let i=0;i<participants.length;i+=2){
+    matches.push({a:participants[i],b:participants[i+1]||{name:'BYE',skill:0,id:`bye-${i}`},winner:null});
+  }
+  return matches;
+}
+function buildNextRound(matches){
+  const winners=[];
+  for(const m of matches){
+    const aName=teamDisplayName(m.a),bName=teamDisplayName(m.b);
+    if(bName==='BYE'){winners.push(m.a);continue;}
+    if(m.winner===m.a.id){winners.push(m.a);}
+    if(m.winner===m.b.id){winners.push(m.b);}
+  }
+  return winners;
+}
+function drawBracketSvg(targetBox, rounds, title){
+  const wrap=document.createElement('div');wrap.className='bracketWrap';
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('class','bracketSvg');
+  const roundGap=220,nodeW=150,nodeH=28,startX=30,startY=30,slotGap=58;
+  const positions=[];
+  rounds.forEach((matches,ri)=>{positions[ri]=[];matches.forEach((m,mi)=>{const x=startX+ri*roundGap;const y=startY+mi*slotGap*Math.pow(2,ri);positions[ri][mi]={x,y,m};
+    const rect=document.createElementNS(svg.namespaceURI,'rect');rect.setAttribute('x',x);rect.setAttribute('y',y);rect.setAttribute('width',nodeW);rect.setAttribute('height',nodeH);rect.setAttribute('rx',10);rect.setAttribute('class','node');svg.appendChild(rect);
+    const text=document.createElementNS(svg.namespaceURI,'text');text.setAttribute('x',x+8);text.setAttribute('y',y+18);text.setAttribute('class','nodeText');text.textContent=`${m.a.name} vs ${m.b.name}`;svg.appendChild(text);
+  });});
+  for(let r=0;r<positions.length-1;r++){
+    positions[r].forEach((p,i)=>{const next=positions[r+1][Math.floor(i/2)];if(!next)return;
+      const path=document.createElementNS(svg.namespaceURI,'path');
+      const x1=p.x+nodeW,y1=p.y+nodeH/2,x2=next.x,y2=next.y+nodeH/2,mx=(x1+x2)/2;
+      path.setAttribute('d',`M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`);
+      path.setAttribute('class','edge');svg.insertBefore(path,svg.firstChild);
+    });
+  }
+  const h=document.createElement('h3');h.textContent=title;wrap.appendChild(h);wrap.appendChild(svg);targetBox.appendChild(wrap);
+}
+function renderDoubleElimination(box, teams){
+  const panel=document.createElement('div');panel.className='team';
+  panel.innerHTML='<h3>Upper Bracket – Gewinner markieren</h3><div class="meta">Klicke im Upper Bracket auf den Team-Knoten. Der Gewinner wird grün markiert. Danach wird das Lower Bracket animiert erzeugt.</div>';
+  const upperWrap=document.createElement('div');upperWrap.className='bracketWrap';upperWrap.style.marginBottom='18px';
+  const lowerWrap=document.createElement('div');
+  box.appendChild(panel);box.appendChild(upperWrap);box.appendChild(lowerWrap);
+  const upper=createRoundState(teams);
+  const nodeW=220,nodeH=32,gapY=74,startY=34,leftX=30,rightX=360,midX=300;
+  const render=()=>{
+    upperWrap.innerHTML='';
+    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('class','bracketSvg');
+    svg.style.minWidth='700px';
+    svg.style.height=Math.max(360,startY+upper.length*gapY+40)+'px';
+    upper.forEach((m,idx)=>{
+      const y=startY+idx*gapY;
+      const winnerA=m.winner===m.a.id;
+      const winnerB=m.winner===m.b.id;
+      const drawNode=(team,x,isWinner,onClick)=>{
+        const displayName=teamDisplayName(team);
+        const g=document.createElementNS(svg.namespaceURI,'g');
+        const rect=document.createElementNS(svg.namespaceURI,'rect');
+        rect.setAttribute('x',x);rect.setAttribute('y',y);rect.setAttribute('width',nodeW);rect.setAttribute('height',nodeH);rect.setAttribute('rx',10);
+        rect.setAttribute('class','node');
+        if(isWinner){rect.style.fill='#22c55e';rect.style.stroke='#166534';rect.style.strokeWidth='3px';}
+        const text=document.createElementNS(svg.namespaceURI,'text');
+        text.setAttribute('x',x+8);text.setAttribute('y',y+20);text.setAttribute('class','nodeText');text.textContent=displayName;
+        if(displayName!=='BYE'){
+          g.style.cursor='pointer';
+          g.addEventListener('click',onClick);
+        }
+        g.append(rect,text);
+        svg.appendChild(g);
+      };
+      drawNode(m.a,leftX,winnerA,()=>{m.winner=m.a.id;render();});
+      drawNode(m.b,rightX,winnerB,()=>{m.winner=m.b.id;render();});
+      const edge1=document.createElementNS(svg.namespaceURI,'path');
+      edge1.setAttribute('d',`M ${leftX+nodeW} ${y+nodeH/2} C ${midX} ${y+nodeH/2}, ${midX-20} ${y+nodeH/2}, ${midX} ${y+nodeH/2}`);
+      edge1.setAttribute('class','edge');
+      svg.insertBefore(edge1,svg.firstChild);
+      const edge2=document.createElementNS(svg.namespaceURI,'path');
+      edge2.setAttribute('d',`M ${rightX} ${y+nodeH/2} C ${midX+80} ${y+nodeH/2}, ${midX+40} ${y+nodeH/2}, ${midX} ${y+nodeH/2}`);
+      edge2.setAttribute('class','edge');
+      svg.insertBefore(edge2,svg.firstChild);
+    });
+    upperWrap.appendChild(svg);
+    upper.forEach((m,idx)=>{
+      if(teamDisplayName(m.b)==='BYE' && !m.winner){m.winner=m.a.id;}
+    });
+    lowerWrap.innerHTML='';
+    const undecided=upper.some((m)=>m.winner===null && teamDisplayName(m.b)!=='BYE');
+    if(undecided){
+      const hint=document.createElement('div');hint.className='meta';hint.textContent='Lower Bracket wird gebaut, sobald alle Gewinner im Upper Bracket markiert sind.';
+      lowerWrap.appendChild(hint);
+      return;
+    }
+    const upperWinners=buildNextRound(upper);
+    upperWrap.querySelectorAll('.upper-next').forEach((n)=>n.remove());
+    if(upperWinners.length>=2){
+      const nextHolder=document.createElement('div');
+      nextHolder.className='upper-next';
+      drawBracketSvg(nextHolder,pairSingle(upperWinners.map((t)=>({...t,label:teamDisplayName(t)}))),'Upper Bracket – nächste Runden');
+      upperWrap.appendChild(nextHolder);
+    }
+    const losers=upper.filter((m)=>teamDisplayName(m.b)!=='BYE' && m.winner!==null).map((m)=>m.winner===m.a.id?m.b:m.a);
+    if(!losers.length){return;}
+    const lowerTitle=document.createElement('h3');lowerTitle.textContent='Lower Bracket – Gewinner markieren';lowerWrap.appendChild(lowerTitle);
+    const lowerState=createRoundState(losers.map((t)=>({...t,label:teamDisplayName(t)})));
+    lowerState.forEach((m)=>{
+      const row=document.createElement('div');row.className='meta';row.style.margin='8px 0';
+      const a=document.createElement('button');a.className='btn ghost';a.textContent=teamDisplayName(m.a);
+      const b=document.createElement('button');b.className='btn ghost';b.textContent=teamDisplayName(m.b);
+      a.onclick=()=>{m.winner=m.a.id;rerenderLower();};
+      b.onclick=()=>{if(teamDisplayName(m.b)==='BYE')return;m.winner=m.b.id;rerenderLower();};
+      row.append(a,document.createTextNode(' vs '),b);
+      lowerWrap.appendChild(row);
+    });
+    function rerenderLower(){
+      const decided=buildNextRound(lowerState);
+      lowerWrap.querySelectorAll('.bracketWrap').forEach((n)=>n.remove());
+      if(decided.length>=2){drawBracketSvg(lowerWrap,pairSingle(decided.map((t)=>({...t,label:teamDisplayName(t)}))),'Lower Bracket (nächste Runde)');}
+    }
+    rerenderLower();
+  };
+  render();
+}
 function renderTournament(teams){
   const box=document.getElementById('tournament');
   const mode=document.getElementById('tournamentType').value;
   box.innerHTML='';
   if(!teams.length){return;}
 
-  const drawBracket=(rounds,title)=>{
-    const wrap=document.createElement('div');wrap.className='bracketWrap';
-    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('class','bracketSvg');
-    const roundGap=220,nodeW=150,nodeH=28,startX=30,startY=30,slotGap=58;
-    const positions=[];
-    rounds.forEach((matches,ri)=>{positions[ri]=[];matches.forEach((m,mi)=>{const x=startX+ri*roundGap;const y=startY+mi*slotGap*Math.pow(2,ri);positions[ri][mi]={x,y,m};
-      const rect=document.createElementNS(svg.namespaceURI,'rect');rect.setAttribute('x',x);rect.setAttribute('y',y);rect.setAttribute('width',nodeW);rect.setAttribute('height',nodeH);rect.setAttribute('rx',10);rect.setAttribute('class','node');svg.appendChild(rect);
-      const text=document.createElementNS(svg.namespaceURI,'text');text.setAttribute('x',x+8);text.setAttribute('y',y+18);text.setAttribute('class','nodeText');text.textContent=`${m.a.name} vs ${m.b.name}`;svg.appendChild(text);
-    });});
-    for(let r=0;r<positions.length-1;r++){
-      positions[r].forEach((p,i)=>{const next=positions[r+1][Math.floor(i/2)];if(!next)return;
-        const path=document.createElementNS(svg.namespaceURI,'path');
-        const x1=p.x+nodeW,y1=p.y+nodeH/2,x2=next.x,y2=next.y+nodeH/2,mx=(x1+x2)/2;
-        path.setAttribute('d',`M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`);
-        path.setAttribute('class','edge');svg.insertBefore(path,svg.firstChild);
-      });
-    }
-    const h=document.createElement('h3');h.textContent=title;wrap.appendChild(h);wrap.appendChild(svg);box.appendChild(wrap);
-  };
-
   if(mode==='single'){
-    drawBracket(pairSingle(teams),'Single Elimination');
+    drawBracketSvg(box,pairSingle(teams),'Single Elimination');
   } else if(mode==='double'){
-    drawBracket(pairSingle(teams),'Upper Bracket');
-    const lowerTeams=teams.map((t,i)=>({name:'Team '+(i+1),skill:Math.max(1,t.skill-1),members:t.members}));
-    drawBracket(pairSingle(lowerTeams),'Lower Bracket');
+    renderDoubleElimination(box,teams);
   } else {
     const col=document.createElement('div');col.className='team';col.innerHTML='<h3>Round Robin Paarungen</h3>';
-    for(let i=0;i<teams.length;i++){for(let j=i+1;j<teams.length;j++){const a='Team '+(i+1),b='Team '+(j+1);col.innerHTML+=`<div class="meta">${a} vs ${b}</div>`;}}
+    for(let i=0;i<teams.length;i++){for(let j=i+1;j<teams.length;j++){const a=teams[i].label,b=teams[j].label;col.innerHTML+=`<div class="meta">${a} vs ${b}</div>`;}}
     box.appendChild(col);
   }
 }
 
 document.getElementById('drawBtn').onclick=()=>{
   const players=parsePlayers(document.getElementById('players').value);
-  const size=Math.max(2,parseInt(document.getElementById('teamSize').value||'3',10));
+  const size=Math.max(1,parseInt(document.getElementById('teamSize').value||'3',10));
   if(players.length<size){alert('Bitte mehr Spieler eintragen.');return;}
   const teams=balanceTeams(players,size);
   renderBalls(players);
